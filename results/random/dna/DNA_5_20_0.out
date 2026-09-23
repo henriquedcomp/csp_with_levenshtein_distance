@@ -1,0 +1,11 @@
+(Hayashida and Koyano 2017 MPSolver)
+STATUS: OPTIMAL
+ATG
+3
+RUNTIME: 36.5103s
+
+(Hayashida and Koyano 2017 CPSolver)
+STATUS: OPTIMAL
+AGTC
+3
+RUNTIME: 33.7433s
