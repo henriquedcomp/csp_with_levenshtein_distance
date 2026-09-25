@@ -1,0 +1,11 @@
+(Hayashida and Koyano 2017 Gurobi)
+STATUS: FEASIBLE
+EVMEA
+8
+RUNTIME: 60.2481s
+
+(Hayashida and Koyano 2017 CP-SAT)
+STATUS: FEASIBLE
+EPKGHTAPA
+8
+RUNTIME: 60.2167s

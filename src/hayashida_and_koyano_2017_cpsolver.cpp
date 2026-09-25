@@ -2,6 +2,7 @@
 #include "string_codec.hpp"
 #include "config.hpp"
 #include "symmetric_matrix.hpp"
+
 #include "ortools/sat/cp_model.h"
 
 using namespace std;
@@ -221,6 +222,8 @@ namespace operations_research
             model.Add(NewSatParameters(parameters));
 
             const CpSolverResponse response = SolveCpModel(cp_model.Build(), &model);
+            LOG(INFO) << CpSolverResponseStats(response);
+
             string status = "OPTIMAL";
 
             if (response.status() != CpSolverStatus::OPTIMAL)

@@ -7,7 +7,7 @@
 
 using namespace std;
 
-double levenshtein_distance(const vector<int> &s, const vector<int> &t, const vector<vector<double>> &SUBS_MATRIX)
+double levenshtein_distance(const vector<int> &s, const vector<int> &t)
 {
     vector<vector<double>> dp_matrix(2, vector<double>(t.size() + 1));
 
@@ -22,9 +22,9 @@ double levenshtein_distance(const vector<int> &s, const vector<int> &t, const ve
 
         for (int j = 1; j < t.size() + 1; j++)
         {
-            dp_matrix[1][j] = min({dp_matrix[0][j - 1] + SUBS_MATRIX[s[i - 1]][t[j - 1]],
-                                   dp_matrix[0][j] + INDEL_COST,
-                                   dp_matrix[1][j - 1] + INDEL_COST});
+            dp_matrix[1][j] = min({dp_matrix[0][j - 1] + (s[i - 1] == t[j - 1] ? 0 : CSUB),
+                                   dp_matrix[0][j] + CINS,
+                                   dp_matrix[1][j - 1] + CDEL});
         }
 
         swap(dp_matrix[0], dp_matrix[1]);
@@ -34,7 +34,7 @@ double levenshtein_distance(const vector<int> &s, const vector<int> &t, const ve
 };
 
 // I'll keep it here for possible future use (backtracking)
-// double levenshtein_distance(const vector<int> &s, const vector<int> &t, const vector<vector<double>> &SUBS_MATRIX)
+// double levenshtein_distance(const vector<int> &s, const vector<int> &t)
 // {
 //     vector<vector<double>> dp_matrix(s.size() + 1, vector<double>(t.size() + 1));
 

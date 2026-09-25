@@ -17,6 +17,23 @@
 
 using namespace std;
 
+void print_solution(optional<Solution> &solution, ofstream &output_file)
+{
+    if (solution.has_value())
+    {
+        string sanitized_string = solution.value().str.size() ? solution.value().str : "ε";
+
+        output_file << "STATUS: " << solution.value().status << "\n"
+                    << "SOLUTION: " << sanitized_string << "\n"
+                    << "DISTANCE: " << solution.value().distance << "\n"
+                    << "RUNTIME: " << solution.value().runtime << "s" << "\n";
+    }
+    else
+    {
+        output_file << "No solution was found." << "\n";
+    }
+}
+
 int main(int argc, char *argv[])
 {
     ifstream input_file(argv[1]);
@@ -32,8 +49,6 @@ int main(int argc, char *argv[])
     alphabet_size = alphabet.size();
 
     StringCodec::set_alphabet(alphabet);
-
-    const vector<vector<double>> SUBS_COST = alphabet_size == 4 ? N_SUBS_COST : A_SUBS_COST;
 
     int number_of_input_strings;
 
@@ -76,8 +91,7 @@ int main(int argc, char *argv[])
         {
             double distance = levenshtein_distance(
                 encoded_input_strings[i],
-                encoded_input_strings[j],
-                SUBS_COST);
+                encoded_input_strings[j]);
 
             distance_matrix(i, j) = distance;
 
@@ -99,19 +113,7 @@ int main(int argc, char *argv[])
         distance_matrix);
 
     output_file << format("({})", "Hayashida and Koyano 2017 Gurobi") << "\n";
-
-    if (solution.has_value())
-    {
-        output_file << "STATUS: " << solution.value().status << "\n"
-                    << solution.value().str << "\n"
-                    << solution.value().distance << "\n"
-                    << "RUNTIME: " << solution.value().runtime << "s" << "\n";
-    }
-    else
-    {
-        output_file << "No solution was found." << "\n";
-    }
-
+    print_solution(solution, output_file);
     output_file << "\n";
 
     solution = operations_research::sat::hayashida_and_koyano_2017(
@@ -121,17 +123,29 @@ int main(int argc, char *argv[])
         distance_matrix);
 
     output_file << format("({})", "Hayashida and Koyano 2017 CP-SAT") << "\n";
+    print_solution(solution, output_file);
 
-    if (solution.has_value())
+    if (alphabet == "01" || alphabet == "10")
     {
-        output_file << "STATUS: " << solution.value().status << "\n"
-                    << solution.value().str << "\n"
-                    << solution.value().distance << "\n"
-                    << "RUNTIME: " << solution.value().runtime << "s" << "\n";
-    }
-    else
-    {
-        output_file << "No solution was found." << "\n";
+        output_file << "\n";
+
+        solution = operations_research::arbib_et_al_binary_path(
+            2 * higher_str_size,
+            encoded_input_strings,
+            lower_str_size);
+
+        output_file << format("({})", "Arbib et al. binary path Gurobi") << "\n";
+        print_solution(solution, output_file);
+
+        output_file << "\n";
+
+        solution = operations_research::sat::arbib_et_al_binary_path(
+            2 * higher_str_size,
+            encoded_input_strings,
+            lower_str_size);
+
+        output_file << format("({})", "Arbib et al. binary path CP-SAT") << "\n";
+        print_solution(solution, output_file);
     }
 
     output_file.close();

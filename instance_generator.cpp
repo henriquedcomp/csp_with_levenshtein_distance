@@ -10,8 +10,12 @@ namespace fs = filesystem;
 
 int main()
 {
+    // controls if an instance generated now will replace content from a file with the same name
     const bool REPLACE_INSTANCES = false;
+
+    // controls if instances/random folder will be completely deleted and instances recreated from zero
     const bool DELETE_AND_RECREATE_INSTANCES = false;
+
     const int INSTANCES_PER_COMBINATION = 3;
 
     const string INSTANCE_PATH = "./instances";

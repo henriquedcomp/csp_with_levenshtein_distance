@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10.0)
-project(csp_with_levenshtein_distance VERSION 0.1.0 LANGUAGES CXX)
+project(csp_with_levenshtein_distance VERSION 0.1.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,6 +14,8 @@ add_executable(
 
     src/hayashida_and_koyano_2017_mpsolver.cpp
     src/hayashida_and_koyano_2017_cpsolver.cpp
+    src/arbib_et_al_binary_path_mpsolver.cpp
+    src/arbib_et_al_binary_path_cpsolver.cpp
 )
 target_include_directories(csp_with_levenshtein_distance PRIVATE include)
 target_link_libraries(csp_with_levenshtein_distance PRIVATE ortools::ortools)
@@ -21,7 +23,7 @@ target_link_libraries(csp_with_levenshtein_distance PRIVATE ortools::ortools)
 #Instance generator
 add_executable(
     instance_generator
-    src/instance_generator.cpp
+    instance_generator.cpp
 )
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
