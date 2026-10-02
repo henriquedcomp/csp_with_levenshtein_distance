@@ -32,9 +32,7 @@ int main()
     const string_view AMINOACID_ALPHABET = "ARNDCQEGHILKMFPSTWYV";
 
     if (fs::exists(RANDOM_INSTANCE_PATH) && DELETE_AND_RECREATE_INSTANCES)
-    {
         fs::remove_all(RANDOM_INSTANCE_PATH);
-    }
 
     random_device rd;
     mt19937 gen(rd());

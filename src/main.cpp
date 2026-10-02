@@ -17,8 +17,10 @@
 
 using namespace std;
 
-void print_solution(optional<Solution> &solution, ofstream &output_file)
+void print_solution(optional<Solution> &solution, ofstream &output_file, const string_view &title)
 {
+    output_file << format("({})", title) << "\n";
+
     if (solution.has_value())
     {
         string sanitized_string = solution.value().str.size() ? solution.value().str : "ε";
@@ -32,6 +34,8 @@ void print_solution(optional<Solution> &solution, ofstream &output_file)
     {
         output_file << "No solution was found." << "\n";
     }
+
+    output_file << "\n";
 }
 
 int main(int argc, char *argv[])
@@ -112,9 +116,18 @@ int main(int argc, char *argv[])
         alphabet,
         distance_matrix);
 
-    output_file << format("({})", "Hayashida and Koyano 2017 Gurobi") << "\n";
-    print_solution(solution, output_file);
-    output_file << "\n";
+    print_solution(solution, output_file, "Hayashida and Koyano 2017 Gurobi");
+
+    solution = operations_research::improved_hayashida_and_koyano_2017(
+        higher_str_size + lower_str_size,
+        encoded_input_strings,
+        alphabet,
+        distance_matrix,
+        lower_str_size,
+        higher_str_size,
+        lower_bound);
+
+    print_solution(solution, output_file, "IMPROVED Hayashida and Koyano 2017 Gurobi");
 
     solution = operations_research::sat::hayashida_and_koyano_2017(
         sum_str_size,
@@ -122,31 +135,93 @@ int main(int argc, char *argv[])
         alphabet,
         distance_matrix);
 
-    output_file << format("({})", "Hayashida and Koyano 2017 CP-SAT") << "\n";
-    print_solution(solution, output_file);
+    print_solution(solution, output_file, "Hayashida and Koyano 2017 CP-SAT");
+
+    solution = operations_research::sat::improved_hayashida_and_koyano_2017(
+        higher_str_size + lower_str_size,
+        encoded_input_strings,
+        alphabet,
+        distance_matrix,
+        lower_str_size,
+        higher_str_size,
+        lower_bound);
+
+    print_solution(solution, output_file, "IMPROVED Hayashida and Koyano 2017 CP-SAT");
 
     if (alphabet == "01" || alphabet == "10")
     {
-        output_file << "\n";
-
         solution = operations_research::arbib_et_al_binary_path(
             2 * higher_str_size,
             encoded_input_strings,
             lower_str_size);
 
-        output_file << format("({})", "Arbib et al. binary path Gurobi") << "\n";
-        print_solution(solution, output_file);
+        print_solution(solution, output_file, "Arbib et al. binary path Gurobi");
 
-        output_file << "\n";
+        solution = operations_research::improved_arbib_et_al_binary_path(
+            higher_str_size + lower_str_size,
+            encoded_input_strings,
+            lower_str_size,
+            distance_matrix,
+            higher_str_size,
+            lower_bound);
+
+        print_solution(solution, output_file, "IMPROVED Arbib et al. binary path Gurobi");
 
         solution = operations_research::sat::arbib_et_al_binary_path(
             2 * higher_str_size,
             encoded_input_strings,
             lower_str_size);
 
-        output_file << format("({})", "Arbib et al. binary path CP-SAT") << "\n";
-        print_solution(solution, output_file);
+        print_solution(solution, output_file, "Arbib et al. binary path CP-SAT");
+
+        solution = operations_research::sat::improved_arbib_et_al_binary_path(
+            higher_str_size + lower_str_size,
+            encoded_input_strings,
+            lower_str_size,
+            distance_matrix,
+            higher_str_size,
+            lower_bound);
+
+        print_solution(solution, output_file, "IMPROVED Arbib et al. binary path CP-SAT");
     }
+
+    solution = operations_research::arbib_et_al_path(
+        2 * higher_str_size,
+        encoded_input_strings,
+        alphabet,
+        lower_str_size);
+
+    print_solution(solution, output_file, "Arbib et al. path Gurobi");
+
+    solution = operations_research::improved_arbib_et_al_path(
+        higher_str_size + lower_str_size,
+        encoded_input_strings,
+        alphabet,
+        lower_str_size,
+        distance_matrix,
+        higher_str_size,
+        lower_bound);
+
+    print_solution(solution, output_file, "IMPROVED Arbib et al. path Gurobi");
+
+    solution = operations_research::sat::arbib_et_al_path(
+        2 * higher_str_size,
+        encoded_input_strings,
+        alphabet,
+        lower_str_size);
+
+    print_solution(solution, output_file, "Arbib et al. path CP-SAT");
+
+    solution = operations_research::sat::improved_arbib_et_al_path(
+        higher_str_size + lower_str_size,
+        encoded_input_strings,
+        alphabet,
+        lower_str_size,
+        distance_matrix,
+        higher_str_size,
+        lower_bound);
+
+    print_solution(solution, output_file, "IMPROVED Arbib et al. path CP-SAT");
 
     output_file.close();
 

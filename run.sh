@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # write using /instances as base dir and do not add extension
-FILE="/random/dna/DNA_5_20_2"
+FILE="/gpcr/Formylpeptide-353-3"
 
 cmake --build build
 

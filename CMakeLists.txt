@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10.0)
-project(csp_with_levenshtein_distance VERSION 0.1.1 LANGUAGES CXX)
+project(csp_with_levenshtein_distance VERSION 0.1.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,6 +16,14 @@ add_executable(
     src/hayashida_and_koyano_2017_cpsolver.cpp
     src/arbib_et_al_binary_path_mpsolver.cpp
     src/arbib_et_al_binary_path_cpsolver.cpp
+    src/arbib_et_al_path_mpsolver.cpp
+    src/improved_hayashida_and_koyano_2017_mpsolver.cpp
+    src/improved_hayashida_and_koyano_2017_cpsolver.cpp
+    src/improved_arbib_et_al_path_cpsolver.cpp
+    src/improved_arbib_et_al_path_mpsolver.cpp
+    src/improved_arbib_et_al_binary_path_mpsolver.cpp
+    src/improved_arbib_et_al_binary_path_cpsolver.cpp
+    src/arbib_et_al_path_cpsolver.cpp
 )
 target_include_directories(csp_with_levenshtein_distance PRIVATE include)
 target_link_libraries(csp_with_levenshtein_distance PRIVATE ortools::ortools)

@@ -134,84 +134,84 @@ namespace operations_research
                 }
             }
 
-            // triangle inequality
-            for (int k1 = 0; k1 < s.size(); k1++)
-            {
-                LinearExpr distance_k1_t;
-                size_t nk1 = s[k1].size();
+            // triangle inequality - it makes results worse
+            // for (int k1 = 0; k1 < s.size(); k1++)
+            // {
+            //     LinearExpr distance_k1_t;
+            //     size_t nk1 = s[k1].size();
 
-                for (int i = 1; i <= nk1; i++)
-                {
-                    distance_k1_t += CDEL * x[k1][i][0];
+            //     for (int i = 1; i <= nk1; i++)
+            //     {
+            //         distance_k1_t += CDEL * x[k1][i][0];
 
-                    for (int j = 1; j <= m; j++)
-                    {
-                        distance_k1_t += CDEL * x[k1][i][j] +
-                                         CINS * y[k1][i][j] +
-                                         CSUB * h[k1][i][j];
-                    }
-                }
+            //         for (int j = 1; j <= m; j++)
+            //         {
+            //             distance_k1_t += CDEL * x[k1][i][j] +
+            //                              CINS * y[k1][i][j] +
+            //                              CSUB * h[k1][i][j];
+            //         }
+            //     }
 
-                for (int j = 1; j <= m; j++)
-                    distance_k1_t += CINS * y[k1][0][j];
+            //     for (int j = 1; j <= m; j++)
+            //         distance_k1_t += CINS * y[k1][0][j];
 
-                distance_k1_t -= CINS * diff;
+            //     distance_k1_t -= CINS * diff;
 
-                for (int k2 = 0; k2 < s.size(); k2++)
-                {
-                    if (k2 == k1)
-                        continue;
+            //     for (int k2 = 0; k2 < s.size(); k2++)
+            //     {
+            //         if (k2 == k1)
+            //             continue;
 
-                    LinearExpr distance_k2_t;
+            //         LinearExpr distance_k2_t;
 
-                    size_t nk2 = s[k2].size();
+            //         size_t nk2 = s[k2].size();
 
-                    for (int i = 1; i <= nk2; i++)
-                    {
-                        distance_k2_t += CDEL * x[k2][i][0];
+            //         for (int i = 1; i <= nk2; i++)
+            //         {
+            //             distance_k2_t += CDEL * x[k2][i][0];
 
-                        for (int j = 1; j <= m; j++)
-                        {
-                            distance_k2_t += CDEL * x[k2][i][j] +
-                                             CINS * y[k2][i][j] +
-                                             CSUB * h[k2][i][j];
-                        }
-                    }
+            //             for (int j = 1; j <= m; j++)
+            //             {
+            //                 distance_k2_t += CDEL * x[k2][i][j] +
+            //                                  CINS * y[k2][i][j] +
+            //                                  CSUB * h[k2][i][j];
+            //             }
+            //         }
 
-                    for (int j = 1; j <= m; j++)
-                        distance_k2_t += CINS * y[k2][0][j];
+            //         for (int j = 1; j <= m; j++)
+            //             distance_k2_t += CINS * y[k2][0][j];
 
-                    distance_k2_t -= CINS * diff;
+            //         distance_k2_t -= CINS * diff;
 
-                    cp_model.AddGreaterOrEqual(dm(k1, k2) + distance_k1_t, distance_k2_t);
-                }
+            //         cp_model.AddGreaterOrEqual(dm(k1, k2) + distance_k1_t, distance_k2_t);
+            //     }
 
-                for (int k2 = k1 + 1; k2 < s.size(); k2++)
-                {
-                    LinearExpr distance_k2_t;
+            //     for (int k2 = k1 + 1; k2 < s.size(); k2++)
+            //     {
+            //         LinearExpr distance_k2_t;
 
-                    size_t nk2 = s[k2].size();
+            //         size_t nk2 = s[k2].size();
 
-                    for (int i = 1; i <= nk2; i++)
-                    {
-                        distance_k2_t += CDEL * x[k2][i][0];
+            //         for (int i = 1; i <= nk2; i++)
+            //         {
+            //             distance_k2_t += CDEL * x[k2][i][0];
 
-                        for (int j = 1; j <= m; j++)
-                        {
-                            distance_k2_t += CDEL * x[k2][i][j] +
-                                             CINS * y[k2][i][j] +
-                                             CSUB * h[k2][i][j];
-                        }
-                    }
+            //             for (int j = 1; j <= m; j++)
+            //             {
+            //                 distance_k2_t += CDEL * x[k2][i][j] +
+            //                                  CINS * y[k2][i][j] +
+            //                                  CSUB * h[k2][i][j];
+            //             }
+            //         }
 
-                    for (int j = 1; j <= m; j++)
-                        distance_k2_t += CINS * y[k2][0][j];
+            //         for (int j = 1; j <= m; j++)
+            //             distance_k2_t += CINS * y[k2][0][j];
 
-                    distance_k2_t -= CINS * diff;
+            //         distance_k2_t -= CINS * diff;
 
-                    cp_model.AddGreaterOrEqual(distance_k1_t + distance_k2_t, dm(k1, k2));
-                }
-            }
+            //         cp_model.AddGreaterOrEqual(distance_k1_t + distance_k2_t, dm(k1, k2));
+            //     }
+            // }
 
             cp_model.Minimize(d);
 

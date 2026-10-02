@@ -8,7 +8,7 @@
 <hr>
 
 ## 1. Installing OR-Tools
-In order to run this project, you'll need OR-Tools v9.14 with Gurobi 12.0.3. This combination certainly will work together [\[Gurobi not working in v9.15\]](https://github.com/google/or-tools/discussions/5026#discussioncomment-15708012). Additionally, C++ Tools is necessary.
+In order to run this project, you'll need OR-Tools v9.14 with Gurobi v12.0.3. This combination certainly will work together [\[Gurobi not working in v9.15\]](https://github.com/google/or-tools/discussions/5026#discussioncomment-15708012). Additionally, C++ Tools is necessary.
 
 In this section I'll help you to install OR-Tools. Gurobi can easily be setup following [this article](https://support.gurobi.com/hc/en-us/articles/4534161999889-How-do-I-install-Gurobi-Optimizer).
 

@@ -1,11 +1,6 @@
-(Hayashida and Koyano 2017 Gurobi)
+(IMPROVED Arbib et al. Gurobi)
 STATUS: OPTIMAL
-MGN
-3
-RUNTIME: 5.0113s
+SOLUTION: MGN
+DISTANCE: 3
+RUNTIME: 0.479728s
 
-(Hayashida and Koyano 2017 CP-SAT)
-STATUS: OPTIMAL
-MGN
-3
-RUNTIME: 3.96796s

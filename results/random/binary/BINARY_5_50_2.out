@@ -1,17 +1,29 @@
 (Hayashida and Koyano 2017 Gurobi)
-No solution was found.
+STATUS: OPTIMAL
+SOLUTION: 0110
+DISTANCE: 3
+RUNTIME: 43.6894s
+
+(Improved Hayashida and Koyano 2017 Gurobi)
+STATUS: OPTIMAL
+SOLUTION: 100
+DISTANCE: 3
+RUNTIME: 2.35755s
 
 (Hayashida and Koyano 2017 CP-SAT)
-No solution was found.
+STATUS: OPTIMAL
+SOLUTION: 0100
+DISTANCE: 3
+RUNTIME: 37.7716s
 
 (Arbib et al. binary path Gurobi)
 STATUS: OPTIMAL
 SOLUTION: 1010
 DISTANCE: 3
-RUNTIME: 0.94962s
+RUNTIME: 0.374178s
 
 (Arbib et al. binary path CP-SAT)
 STATUS: OPTIMAL
-SOLUTION: 10001
+SOLUTION: 0101
 DISTANCE: 3
-RUNTIME: 5.09299s
+RUNTIME: 1.84375s

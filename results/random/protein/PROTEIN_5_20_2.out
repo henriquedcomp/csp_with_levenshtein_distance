@@ -1,8 +1,12 @@
-(Hayashida and Koyano 2017 Gurobi)
-STATUS: FEASIBLE
+(Arbib et al. path CP-SAT)
+STATUS: OPTIMAL
+SOLUTION: VLAT
+DISTANCE: 4
+RUNTIME: 0.748257s
 
-5
-RUNTIME: 60.5074s
+(IMPROVED Arbib et al. path CP-SAT)
+STATUS: OPTIMAL
+SOLUTION: VLAT
+DISTANCE: 4
+RUNTIME: 0.54128s
 
-(Hayashida and Koyano 2017 CP-SAT)
-No solution was found.
