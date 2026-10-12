@@ -15,13 +15,18 @@ namespace operations_research
             int m,
             const vector<vector<int>> &s,
             const string_view &a,
-            const SymmetricMatrix<double> &dm)
+            const SymmetricMatrix<double> &dm,
+            int higher_str_size,
+            int lower_str_size)
         {
             CpModelBuilder cp_model;
 
-            const Domain solution_domain(0, m);
+            const double solution_ub = CSUB * lower_str_size + CDEL * (higher_str_size - lower_str_size);
+            const Domain solution_domain(0, solution_ub);
             const IntVar d = cp_model.NewIntVar(solution_domain);
-            const IntVar l = cp_model.NewIntVar(solution_domain);
+
+            const Domain solution_length_domain(0, m);
+            const IntVar l = cp_model.NewIntVar(solution_length_domain);
 
             const Domain alphabet_domain(0, a.size() - 1);
             vector<IntVar> t(m);

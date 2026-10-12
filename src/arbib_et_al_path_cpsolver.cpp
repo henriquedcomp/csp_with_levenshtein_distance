@@ -16,11 +16,13 @@ namespace operations_research
             int n,
             const vector<vector<int>> &stringpool,
             const string_view &a,
-            int p)
+            int p,
+            int higher_str_size)
         {
             CpModelBuilder cp_model;
 
-            const Domain solution_domain(0, n);
+            const double solution_ub = CSUB * p + CDEL * (higher_str_size - p);
+            const Domain solution_domain(0, solution_ub);
             const IntVar d = cp_model.NewIntVar(solution_domain);
 
             const Domain solution_string_domain(0, a.size() - 1);
@@ -29,15 +31,15 @@ namespace operations_research
             for (int i = 0; i < n; i++)
                 x[i] = cp_model.NewIntVar(solution_string_domain);
 
-            OffsetVector<BoolVar> u(p, n + 1);
-            for (int k = p; k <= n + 1; k++)
+            OffsetVector<BoolVar> u(0, n + 1);
+            for (int k = 0; k <= n + 1; k++)
                 u[k] = cp_model.NewBoolVar();
 
-            for (int k = p + 1; k < n; k++)
+            for (int k = 1; k < n; k++)
                 cp_model.AddGreaterOrEqual(u[k], u[k + 1]);
 
-            cp_model.AddEquality(u[p], 1.0);
-            cp_model.AddEquality(u[n + 1], 0);
+            cp_model.AddEquality(u[0], 1.0);
+            cp_model.AddEquality(u[n + 1], 0.0);
 
             for (int i = 0; i < stringpool.size(); i++)
             {
@@ -45,7 +47,6 @@ namespace operations_research
 
                 vector<Arc> arcs;
                 GraphConstruction::generate_arcs(nk, n, arcs);
-                vector<int> costs(arcs.size(), 1);
 
                 vector<Vertex> nodes;
                 GraphConstruction::generate_nodes(arcs, nodes);
@@ -65,7 +66,7 @@ namespace operations_research
                 {
                     int j = get<1>(get<1>(arc));
 
-                    if (p < j && j <= n)
+                    if (0 < j && j <= n)
                         cp_model.AddLessOrEqual(flow[arc], u[j]);
                 }
 
@@ -73,24 +74,12 @@ namespace operations_research
                 {
                     int j = get<1>(get<1>(arc));
 
-                    if (p < j && j <= n)
+                    if (0 < j && j <= n)
                         cp_model.AddLessOrEqual(zero_cost_flow[arc], u[j]);
                 }
 
                 for (const auto &zcf : zero_cost_flow)
-                {
-                    BoolVar e = cp_model.NewBoolVar();
-
-                    cp_model.AddLessOrEqual(
-                        get<2>(zcf.first) - x[get<1>(get<1>(zcf.first)) - 1],
-                        a.size() * e);
-
-                    cp_model.AddLessOrEqual(
-                        x[get<1>(get<1>(zcf.first)) - 1] - get<2>(zcf.first),
-                        a.size() * e);
-
-                    cp_model.AddLessOrEqual(e + zcf.second, 1);
-                }
+                    cp_model.AddEquality(x[get<1>(get<1>(zcf.first)) - 1], get<2>(zcf.first)).OnlyEnforceIf(zcf.second);
 
                 LinearExpr source;
 
@@ -135,7 +124,7 @@ namespace operations_research
                     cp_model.AddEquality(outflow, inflow);
                 }
 
-                for (int k = p; k <= n; k++)
+                for (int k = 0; k <= n; k++)
                 {
                     LinearExpr outflow, inflow;
                     Vertex node(nk, k);
@@ -164,7 +153,7 @@ namespace operations_research
                 LinearExpr distance;
 
                 for (const auto &value : flow)
-                    distance += value.second;
+                    distance += get<2>(value.first) * value.second;
 
                 cp_model.AddLessOrEqual(distance, d);
             }
@@ -210,7 +199,7 @@ namespace operations_research
             {
                 if (SolutionIntegerValue(response, var) < 0.5)
                 {
-                    solution_length = p + i - 1;
+                    solution_length = i - 1;
                     break;
                 }
 

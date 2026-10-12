@@ -17,7 +17,7 @@
 
 using namespace std;
 
-void print_solution(optional<Solution> &solution, ofstream &output_file, const string_view &title)
+void print_solution(optional<Solution> &solution, ofstream &output_file, const string_view &title, bool last_line = false)
 {
     output_file << format("({})", title) << "\n";
 
@@ -28,14 +28,14 @@ void print_solution(optional<Solution> &solution, ofstream &output_file, const s
         output_file << "STATUS: " << solution.value().status << "\n"
                     << "SOLUTION: " << sanitized_string << "\n"
                     << "DISTANCE: " << solution.value().distance << "\n"
-                    << "RUNTIME: " << solution.value().runtime << "s" << "\n";
+                    << "RUNTIME: " << solution.value().runtime << "s" << (!last_line ? "\n" : "");
     }
     else
     {
-        output_file << "No solution was found." << "\n";
+        output_file << "No solution was found." << (!last_line ? "\n" : "");
     }
 
-    output_file << "\n";
+    output_file << (!last_line ? "\n" : "");
 }
 
 int main(int argc, char *argv[])
@@ -108,10 +108,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    double lower_bound = ceil(diameter / 2);
+    double lower_bound = diameter / 2;
 
     optional<Solution> solution = operations_research::hayashida_and_koyano_2017(
-        sum_str_size,
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
         alphabet,
         distance_matrix);
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     print_solution(solution, output_file, "Hayashida and Koyano 2017 Gurobi");
 
     solution = operations_research::improved_hayashida_and_koyano_2017(
-        higher_str_size + lower_str_size,
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
         alphabet,
         distance_matrix,
@@ -133,12 +133,14 @@ int main(int argc, char *argv[])
         sum_str_size,
         encoded_input_strings,
         alphabet,
-        distance_matrix);
+        distance_matrix,
+        higher_str_size,
+        lower_str_size);
 
     print_solution(solution, output_file, "Hayashida and Koyano 2017 CP-SAT");
 
     solution = operations_research::sat::improved_hayashida_and_koyano_2017(
-        higher_str_size + lower_str_size,
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
         alphabet,
         distance_matrix,
@@ -151,14 +153,14 @@ int main(int argc, char *argv[])
     if (alphabet == "01" || alphabet == "10")
     {
         solution = operations_research::arbib_et_al_binary_path(
-            2 * higher_str_size,
+            floor(CSUB / CDEL * lower_str_size + higher_str_size),
             encoded_input_strings,
             lower_str_size);
 
         print_solution(solution, output_file, "Arbib et al. binary path Gurobi");
 
         solution = operations_research::improved_arbib_et_al_binary_path(
-            higher_str_size + lower_str_size,
+            floor(CSUB / CDEL * lower_str_size + higher_str_size),
             encoded_input_strings,
             lower_str_size,
             distance_matrix,
@@ -168,14 +170,15 @@ int main(int argc, char *argv[])
         print_solution(solution, output_file, "IMPROVED Arbib et al. binary path Gurobi");
 
         solution = operations_research::sat::arbib_et_al_binary_path(
-            2 * higher_str_size,
+            floor(CSUB / CDEL * lower_str_size + higher_str_size),
             encoded_input_strings,
-            lower_str_size);
+            lower_str_size,
+            higher_str_size);
 
         print_solution(solution, output_file, "Arbib et al. binary path CP-SAT");
 
         solution = operations_research::sat::improved_arbib_et_al_binary_path(
-            higher_str_size + lower_str_size,
+            floor(CSUB / CDEL * lower_str_size + higher_str_size),
             encoded_input_strings,
             lower_str_size,
             distance_matrix,
@@ -186,7 +189,7 @@ int main(int argc, char *argv[])
     }
 
     solution = operations_research::arbib_et_al_path(
-        2 * higher_str_size,
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
         alphabet,
         lower_str_size);
@@ -194,7 +197,7 @@ int main(int argc, char *argv[])
     print_solution(solution, output_file, "Arbib et al. path Gurobi");
 
     solution = operations_research::improved_arbib_et_al_path(
-        higher_str_size + lower_str_size,
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
         alphabet,
         lower_str_size,
@@ -205,15 +208,16 @@ int main(int argc, char *argv[])
     print_solution(solution, output_file, "IMPROVED Arbib et al. path Gurobi");
 
     solution = operations_research::sat::arbib_et_al_path(
-        2 * higher_str_size,
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
         alphabet,
-        lower_str_size);
+        lower_str_size,
+        higher_str_size);
 
     print_solution(solution, output_file, "Arbib et al. path CP-SAT");
 
     solution = operations_research::sat::improved_arbib_et_al_path(
-        higher_str_size + lower_str_size,
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
         alphabet,
         lower_str_size,
@@ -221,7 +225,7 @@ int main(int argc, char *argv[])
         higher_str_size,
         lower_bound);
 
-    print_solution(solution, output_file, "IMPROVED Arbib et al. path CP-SAT");
+    print_solution(solution, output_file, "IMPROVED Arbib et al. path CP-SAT", true);
 
     output_file.close();
 

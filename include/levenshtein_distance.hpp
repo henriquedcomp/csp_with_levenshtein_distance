@@ -12,19 +12,17 @@ double levenshtein_distance(const vector<int> &s, const vector<int> &t)
     vector<vector<double>> dp_matrix(2, vector<double>(t.size() + 1));
 
     for (int j = 0; j < t.size() + 1; j++)
-    {
-        dp_matrix[0][j] = j;
-    }
+        dp_matrix[0][j] = j * CINS;
 
     for (int i = 1; i < s.size() + 1; i++)
     {
-        dp_matrix[1][0] = i;
+        dp_matrix[1][0] = i * CDEL;
 
         for (int j = 1; j < t.size() + 1; j++)
         {
             dp_matrix[1][j] = min({dp_matrix[0][j - 1] + (s[i - 1] == t[j - 1] ? 0 : CSUB),
-                                   dp_matrix[0][j] + CINS,
-                                   dp_matrix[1][j - 1] + CDEL});
+                                   dp_matrix[0][j] + CDEL,
+                                   dp_matrix[1][j - 1] + CINS});
         }
 
         swap(dp_matrix[0], dp_matrix[1]);

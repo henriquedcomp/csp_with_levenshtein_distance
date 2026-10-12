@@ -34,18 +34,18 @@ namespace operations_research
         vector<MPVariable *> x;
         solver->MakeNumVarArray(n, 0, a.size() - 1, "x", &x);
 
-        OffsetVector<MPVariable *> u(p, n + 1);
-        for (int k = p; k <= n + 1; k++)
+        OffsetVector<MPVariable *> u(0, n + 1);
+        for (int k = 0; k <= n + 1; k++)
         {
             string variable_name = format("u_{}", k);
             u[k] = solver->MakeBoolVar(variable_name);
         }
 
-        for (int k = p + 1; k < n; k++)
+        for (int k = 1; k < n; k++)
             solver->MakeRowConstraint(LinearExpr(u[k]) >= LinearExpr(u[k + 1])); // (9)
 
         // (11) obs.
-        solver->MakeRowConstraint(LinearExpr(u[p]) == 1.0);
+        solver->MakeRowConstraint(LinearExpr(u[0]) == 1.0);
         solver->MakeRowConstraint(LinearExpr(u[n + 1]) == 0.0);
 
         for (int i = 0; i < stringpool.size(); i++)
@@ -54,7 +54,6 @@ namespace operations_research
 
             vector<Arc> arcs;
             GraphConstruction::generate_arcs(nk, n, arcs);
-            vector<int> costs(arcs.size(), 1);
 
             vector<Vertex> nodes;
             GraphConstruction::generate_nodes(arcs, nodes);
@@ -86,7 +85,7 @@ namespace operations_research
             {
                 int j = get<1>(get<1>(arc));
 
-                if (p < j && j <= n)
+                if (0 < j && j <= n)
                     solver->MakeRowConstraint(LinearExpr(flow[arc]) <= LinearExpr(u[j])); // (10)
             }
 
@@ -94,7 +93,7 @@ namespace operations_research
             {
                 int j = get<1>(get<1>(arc));
 
-                if (p < j && j <= n)
+                if (0 < j && j <= n)
                     solver->MakeRowConstraint(LinearExpr(zero_cost_flow[arc]) <= LinearExpr(u[j])); // (10)
             }
 
@@ -158,7 +157,7 @@ namespace operations_research
                 solver->MakeRowConstraint(outflow == inflow);
             }
 
-            for (int k = p; k <= n; k++)
+            for (int k = 0; k <= n; k++)
             {
                 LinearExpr outflow, inflow;
                 Vertex node(nk, k);
@@ -188,7 +187,7 @@ namespace operations_research
             LinearExpr distance;
 
             for (const auto &value : flow)
-                distance += value.second;
+                distance += get<2>(value.first) * LinearExpr(value.second);
 
             solver->MakeRowConstraint(distance <= d);
         }
@@ -227,7 +226,7 @@ namespace operations_research
         {
             if (var->solution_value() < 0.5)
             {
-                solution_length = p + i - 1;
+                solution_length = i - 1;
                 break;
             }
 

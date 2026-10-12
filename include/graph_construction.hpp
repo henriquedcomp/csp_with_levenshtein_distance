@@ -4,10 +4,12 @@
 #include <tuple>
 #include <set>
 
+#include "config.hpp"
+
 using namespace std;
 
 using Vertex = tuple<int, int>;
-using Arc = tuple<Vertex, Vertex>;
+using Arc = tuple<Vertex, Vertex, double>;
 using FreeSlantArc = tuple<Vertex, Vertex, int>;
 
 class GraphConstruction
@@ -24,7 +26,8 @@ public:
                     arcs.push_back(
                         Arc(
                             Vertex(i, j),
-                            Vertex(i + 1, j)));
+                            Vertex(i + 1, j),
+                            CDEL));
                 }
 
                 if (j < n)
@@ -32,7 +35,8 @@ public:
                     arcs.push_back(
                         Arc(
                             Vertex(i, j),
-                            Vertex(i, j + 1)));
+                            Vertex(i, j + 1),
+                            CINS));
                 }
 
                 if (i < nk && j < n)
@@ -40,7 +44,8 @@ public:
                     arcs.push_back(
                         Arc(
                             Vertex(i, j),
-                            Vertex(i + 1, j + 1)));
+                            Vertex(i + 1, j + 1),
+                            CSUB));
                 }
             }
         }

@@ -17,7 +17,7 @@ namespace operations_research
         const SymmetricMatrix<double> &dm,
         int lower_str_size,
         int higher_str_size,
-        int solution_lower_bound)
+        double solution_lower_bound)
     {
         unique_ptr<MPSolver> solver(MPSolver::CreateSolver("GUROBI"));
         if (!solver)
@@ -28,8 +28,9 @@ namespace operations_research
 
         solver->set_time_limit(TIME_LIMIT_IN_MS);
 
-        MPVariable *d = solver->MakeNumVar(solution_lower_bound, higher_str_size, "d");
-        MPVariable *l = solver->MakeIntVar(lower_str_size, m, "l");
+        const double solution_ub = CSUB * lower_str_size + CDEL * (higher_str_size - lower_str_size);
+        MPVariable *d = solver->MakeNumVar(solution_lower_bound, solution_ub, "d");
+        MPVariable *l = solver->MakeIntVar(0.0, m, "l");
 
         vector<MPVariable *> t;
         solver->MakeIntVarArray(m, 0.0, a.size() - 1, "t", &t);
@@ -273,8 +274,8 @@ namespace operations_research
         }
 
         // additional constraints
-        solver->MakeRowConstraint(higher_str_size - LinearExpr(d) <= LinearExpr(l));
-        solver->MakeRowConstraint(LinearExpr(l) <= lower_str_size + LinearExpr(d));
+        solver->MakeRowConstraint(CINS * higher_str_size - LinearExpr(d) <= LinearExpr(l) * CINS);
+        solver->MakeRowConstraint(LinearExpr(l) * CDEL <= lower_str_size * CDEL + LinearExpr(d));
 
         MPObjective *objective = solver->MutableObjective();
         objective->SetCoefficient(d, 1);

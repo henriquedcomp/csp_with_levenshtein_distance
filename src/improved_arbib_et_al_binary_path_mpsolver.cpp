@@ -19,7 +19,7 @@ namespace operations_research
         int p,
         const SymmetricMatrix<double> &dm,
         int higher_str_size,
-        int solution_lower_bound)
+        double solution_lower_bound)
     {
         unique_ptr<MPSolver> solver(MPSolver::CreateSolver("GUROBI"));
         if (!solver)
@@ -30,23 +30,24 @@ namespace operations_research
 
         solver->set_time_limit(TIME_LIMIT_IN_MS);
 
-        MPVariable *d = solver->MakeNumVar(solution_lower_bound, higher_str_size, "d");
+        const double solution_ub = CSUB * p + CDEL * (higher_str_size - p);
+        MPVariable *d = solver->MakeNumVar(solution_lower_bound, solution_ub, "d");
 
         vector<MPVariable *> x;
         solver->MakeBoolVarArray(n, "x", &x);
 
-        OffsetVector<MPVariable *> u(p, n + 1);
-        for (int k = p; k <= n + 1; k++)
+        OffsetVector<MPVariable *> u(0, n + 1);
+        for (int k = 0; k <= n + 1; k++)
         {
             string variable_name = format("u_{}", k);
             u[k] = solver->MakeBoolVar(variable_name);
         }
 
-        for (int k = p + 1; k < n; k++)
+        for (int k = 1; k < n; k++)
             solver->MakeRowConstraint(LinearExpr(u[k]) >= LinearExpr(u[k + 1])); // (9)
 
         // (11) obs.
-        solver->MakeRowConstraint(LinearExpr(u[p]) == 1.0);
+        solver->MakeRowConstraint(LinearExpr(u[0]) == 1.0);
         solver->MakeRowConstraint(LinearExpr(u[n + 1]) == 0.0);
 
         // flow is "ye" variables for cost arcs
@@ -58,7 +59,6 @@ namespace operations_research
 
             vector<Arc> arcs;
             GraphConstruction::generate_arcs(nk, n, arcs);
-            vector<int> costs(arcs.size(), 1);
 
             vector<Vertex> nodes;
             GraphConstruction::generate_nodes(arcs, nodes);
@@ -89,7 +89,7 @@ namespace operations_research
             {
                 int j = get<1>(get<1>(arc));
 
-                if (p < j && j <= n)
+                if (0 < j && j <= n)
                     solver->MakeRowConstraint(LinearExpr(internal_flow[arc]) <= LinearExpr(u[j])); // (10)
             }
 
@@ -97,7 +97,7 @@ namespace operations_research
             {
                 int j = get<1>(get<1>(arc));
 
-                if (p < j && j <= n)
+                if (0 < j && j <= n)
                     solver->MakeRowConstraint(LinearExpr(zero_cost_flow[arc]) <= LinearExpr(u[j])); // (10)
             }
 
@@ -164,7 +164,7 @@ namespace operations_research
                 solver->MakeRowConstraint(outflow == inflow);
             }
 
-            for (int k = p; k <= n; k++)
+            for (int k = 0; k <= n; k++)
             {
                 LinearExpr outflow, inflow;
                 Vertex node(nk, k);
@@ -194,7 +194,7 @@ namespace operations_research
             LinearExpr distance;
 
             for (const auto &value : internal_flow)
-                distance += value.second;
+                distance += get<2>(value.first) * LinearExpr(value.second);
 
             solver->MakeRowConstraint(distance <= d);
         }
@@ -205,7 +205,7 @@ namespace operations_research
             LinearExpr distance_i_x;
 
             for (const auto &value : flow[i])
-                distance_i_x += value.second;
+                distance_i_x += get<2>(value.first) * LinearExpr(value.second);
 
             for (int j = 0; j < stringpool.size(); j++)
             {
@@ -215,7 +215,7 @@ namespace operations_research
                 LinearExpr distance_j_x;
 
                 for (const auto &value : flow[j])
-                    distance_j_x += value.second;
+                    distance_j_x += get<2>(value.first) * LinearExpr(value.second);
 
                 solver->MakeRowConstraint(dm(i, j) + distance_i_x >= distance_j_x);
             }
@@ -225,14 +225,14 @@ namespace operations_research
                 LinearExpr distance_j_x;
 
                 for (const auto &value : flow[j])
-                    distance_j_x += value.second;
+                    distance_j_x += get<2>(value.first) * LinearExpr(value.second);
 
                 solver->MakeRowConstraint(distance_i_x + distance_j_x >= dm(i, j));
             }
         }
 
         // additional constraints made results worse
-        // for (int k = p; k <= n; k++)
+        // for (int k = 0; k <= n; k++)
         // {
         //     solver->MakeRowConstraint(higher_str_size - LinearExpr(d) <=
         //                               k - 1 + LinearExpr(u[k]) * (higher_str_size + 1));
@@ -275,7 +275,7 @@ namespace operations_research
         {
             if (var->solution_value() < 0.5)
             {
-                solution_length = p + i - 1;
+                solution_length = i - 1;
                 break;
             }
 

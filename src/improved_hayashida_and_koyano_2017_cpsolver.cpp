@@ -18,12 +18,13 @@ namespace operations_research
             const SymmetricMatrix<double> &dm,
             int lower_str_size,
             int higher_str_size,
-            int solution_lower_bound)
+            double solution_lower_bound)
         {
             CpModelBuilder cp_model;
 
-            const Domain solution_domain(solution_lower_bound, higher_str_size);
-            const Domain solution_size_domain(lower_str_size, m);
+            const double solution_ub = CSUB * lower_str_size + CDEL * (higher_str_size - lower_str_size);
+            const Domain solution_domain(solution_lower_bound, solution_ub);
+            const Domain solution_size_domain(0, m);
 
             const IntVar d = cp_model.NewIntVar(solution_domain);
             const IntVar l = cp_model.NewIntVar(solution_size_domain);
@@ -219,8 +220,8 @@ namespace operations_research
             // }
 
             // additional constraints
-            cp_model.AddLessOrEqual(higher_str_size - d, l);
-            cp_model.AddLessOrEqual(l, lower_str_size + d);
+            cp_model.AddLessOrEqual(CINS * higher_str_size - d, l * CINS);
+            cp_model.AddLessOrEqual(l * CDEL, lower_str_size * CDEL + d);
 
             cp_model.Minimize(d);
 

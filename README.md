@@ -14,7 +14,7 @@ In this section I'll help you to install OR-Tools. Gurobi can easily be setup fo
 
 Before we proceed, I'll suppose, once you've arrived at this repository, you're a Linux user. If it's not the case, you should consider switch to Linux or follow documentation for your OS. [OR-Tools for C++](https://developers.google.com/optimization/install/cpp).
 
-OR-Tools can be installed from two manners: pré-compiled binary or source code. Let's follow the binary installation due to it simplicity and pre-integration with Gurobi [Building from source OR-Tools C++ on Linux](https://developers.google.com/optimization/install/cpp/source_linux).
+OR-Tools can be installed from two manners: pre-compiled binary or source code. Let's follow the binary installation due to it simplicity and pre-integration with Gurobi [Building from source OR-Tools C++ on Linux](https://developers.google.com/optimization/install/cpp/source_linux).
 
 Download tar.gz file for your distro in [Installing OR-Tools for C++ from Binary on Linux](https://developers.google.com/optimization/install/cpp/binary_linux)
 
@@ -27,7 +27,7 @@ sudo tar -xzf or-tools_amd64_ubuntu-22.04_cpp_v9.12.4544.tar.gz -C /usr/local
 Now, OR-Tools must be working properly with Gurobi in this C++ project.
 
 ## 2. Overview and project structure
-This project aims to test some Integer Linear Programming formulations to closest string problem (aka center string problem) using Levenhtein Distance as a distance metric. Also, we'll improve formulations by adding some new constraints and make tests using Constraint Programming (CP-SAT solver) too.
+This project aims to test some integer linear programming formulations to closest string problem (aka center string problem) using Levenhtein distance as a distance metric. Also, we'll improve formulations by adding some new constraints and make tests using constraint programming (CP-SAT solver) too.
 
 The project is organized as follows:
 ```
@@ -49,7 +49,7 @@ csp_with_levenshtein_distance/
 └── runall.sh
 ```
 
-You can change execution time limit and levenshtein distance operation costs in include/config.hpp.
+You can change execution time limit and Levenshtein distance operation costs in include/config.hpp.
 Attention: In order to keep compatibility with constraint programming, use only integer costs.
 ## 3. Instances
 Random instances were created in such a manner that you can easily rebuilt it with other parameters as needed. The file instance_generator.cpp owns this responsability.
