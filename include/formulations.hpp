@@ -35,12 +35,23 @@ namespace operations_research
         double solution_lower_bound);
 
     optional<Solution> arbib_et_al_binary_path(
-        int n,                                 // upper bound on solution size
-        const vector<vector<int>> &stringpool, // input strings in 0-1 alphabet
-        int p                                  // lower str size
+        int n,                                // upper bound on solution size
+        const vector<vector<int>> &stringpool // input strings in 0-1 alphabet
     );
 
+    optional<Solution> arbib_et_al_binary_matching(
+        int n,
+        const vector<vector<int>> &stringpool);
+
     optional<Solution> improved_arbib_et_al_binary_path(
+        int n,
+        const vector<vector<int>> &stringpool,
+        int p,
+        const SymmetricMatrix<double> &dm,
+        int higher_str_size,
+        double solution_lower_bound);
+
+    optional<Solution> improved_arbib_et_al_binary_matching(
         int n,
         const vector<vector<int>> &stringpool,
         int p,
@@ -51,10 +62,23 @@ namespace operations_research
     optional<Solution> arbib_et_al_path(
         int n,
         const vector<vector<int>> &stringpool,
-        const string_view &a,
-        int p);
+        const string_view &a);
+
+    optional<Solution> arbib_et_al_matching(
+        int n,
+        const vector<vector<int>> &stringpool,
+        const string_view &a);
 
     optional<Solution> improved_arbib_et_al_path(
+        int n,
+        const vector<vector<int>> &stringpool,
+        const string_view &a,
+        int p,
+        const SymmetricMatrix<double> &dm,
+        int higher_str_size,
+        double solution_lower_bound);
+
+    optional<Solution> improved_arbib_et_al_matching(
         int n,
         const vector<vector<int>> &stringpool,
         const string_view &a,
@@ -88,7 +112,21 @@ namespace operations_research
             int p,
             int higher_str_size);
 
+        optional<Solution> arbib_et_al_binary_matching(
+            int n,
+            const vector<vector<int>> &stringpool,
+            int p,
+            int higher_str_size);
+
         optional<Solution> improved_arbib_et_al_binary_path(
+            int n,
+            const vector<vector<int>> &stringpool,
+            int p,
+            const SymmetricMatrix<double> &dm,
+            int higher_str_size,
+            double solution_lower_bound);
+
+        optional<Solution> improved_arbib_et_al_binary_matching(
             int n,
             const vector<vector<int>> &stringpool,
             int p,
@@ -103,7 +141,23 @@ namespace operations_research
             int p,
             int higher_str_size);
 
+        optional<Solution> arbib_et_al_matching(
+            int n,
+            const vector<vector<int>> &stringpool,
+            const string_view &a,
+            int p,
+            int higher_str_size);
+
         optional<Solution> improved_arbib_et_al_path(
+            int n,
+            const vector<vector<int>> &stringpool,
+            const string_view &a,
+            int p,
+            const SymmetricMatrix<double> &dm,
+            int higher_str_size,
+            double solution_lower_bound);
+
+        optional<Solution> improved_arbib_et_al_matching(
             int n,
             const vector<vector<int>> &stringpool,
             const string_view &a,

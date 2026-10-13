@@ -16,8 +16,7 @@ namespace operations_research
     optional<Solution> arbib_et_al_path(
         int n,
         const vector<vector<int>> &stringpool,
-        const string_view &a,
-        int p)
+        const string_view &a)
     {
         unique_ptr<MPSolver> solver(MPSolver::CreateSolver("GUROBI"));
         if (!solver)

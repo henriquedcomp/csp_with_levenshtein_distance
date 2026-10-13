@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # write using /instances as base dir and do not add extension
-FILE="/random/binary/BINARY_5_10_0"
+FILE="/random/dna/DNA_10_20_1"
 
 cmake --build build
 

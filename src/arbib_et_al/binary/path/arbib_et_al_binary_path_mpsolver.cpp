@@ -15,8 +15,7 @@ namespace operations_research
 {
     optional<Solution> arbib_et_al_binary_path(
         int n,
-        const vector<vector<int>> &stringpool,
-        int p)
+        const vector<vector<int>> &stringpool)
     {
         unique_ptr<MPSolver> solver(MPSolver::CreateSolver("GUROBI"));
         if (!solver)
@@ -44,7 +43,7 @@ namespace operations_research
             solver->MakeRowConstraint(LinearExpr(u[k]) >= LinearExpr(u[k + 1])); // (9)
 
         // (11) obs.
-        solver->MakeRowConstraint(LinearExpr(u[p]) == 1.0);
+        solver->MakeRowConstraint(LinearExpr(u[0]) == 1.0);
         solver->MakeRowConstraint(LinearExpr(u[n + 1]) == 0.0);
 
         for (int i = 0; i < stringpool.size(); i++)

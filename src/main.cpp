@@ -154,8 +154,7 @@ int main(int argc, char *argv[])
     {
         solution = operations_research::arbib_et_al_binary_path(
             floor(CSUB / CDEL * lower_str_size + higher_str_size),
-            encoded_input_strings,
-            lower_str_size);
+            encoded_input_strings);
 
         print_solution(solution, output_file, "Arbib et al. binary path Gurobi");
 
@@ -186,13 +185,46 @@ int main(int argc, char *argv[])
             lower_bound);
 
         print_solution(solution, output_file, "IMPROVED Arbib et al. binary path CP-SAT");
+
+        solution = operations_research::arbib_et_al_binary_matching(
+            floor(CSUB / CDEL * lower_str_size + higher_str_size),
+            encoded_input_strings);
+
+        print_solution(solution, output_file, "Arbib et al. binary matching Gurobi");
+
+        solution = operations_research::improved_arbib_et_al_binary_matching(
+            floor(CSUB / CDEL * lower_str_size + higher_str_size),
+            encoded_input_strings,
+            lower_str_size,
+            distance_matrix,
+            higher_str_size,
+            lower_bound);
+
+        print_solution(solution, output_file, "IMPROVED Arbib et al. binary matching Gurobi");
+
+        solution = operations_research::sat::arbib_et_al_binary_matching(
+            floor(CSUB / CDEL * lower_str_size + higher_str_size),
+            encoded_input_strings,
+            lower_str_size,
+            higher_str_size);
+
+        print_solution(solution, output_file, "Arbib et al. binary matching CP-SAT");
+
+        solution = operations_research::sat::improved_arbib_et_al_binary_matching(
+            floor(CSUB / CDEL * lower_str_size + higher_str_size),
+            encoded_input_strings,
+            lower_str_size,
+            distance_matrix,
+            higher_str_size,
+            lower_bound);
+
+        print_solution(solution, output_file, "IMPROVED Arbib et al. binary matching CP-SAT");
     }
 
     solution = operations_research::arbib_et_al_path(
         floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
-        alphabet,
-        lower_str_size);
+        alphabet);
 
     print_solution(solution, output_file, "Arbib et al. path Gurobi");
 
@@ -207,6 +239,24 @@ int main(int argc, char *argv[])
 
     print_solution(solution, output_file, "IMPROVED Arbib et al. path Gurobi");
 
+    solution = operations_research::arbib_et_al_matching(
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
+        encoded_input_strings,
+        alphabet);
+
+    print_solution(solution, output_file, "Arbib et al. matching Gurobi");
+
+    solution = operations_research::improved_arbib_et_al_matching(
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
+        encoded_input_strings,
+        alphabet,
+        lower_str_size,
+        distance_matrix,
+        higher_str_size,
+        lower_bound);
+
+    print_solution(solution, output_file, "IMPROVED Arbib et al. matching Gurobi");
+
     solution = operations_research::sat::arbib_et_al_path(
         floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
@@ -215,6 +265,15 @@ int main(int argc, char *argv[])
         higher_str_size);
 
     print_solution(solution, output_file, "Arbib et al. path CP-SAT");
+
+    solution = operations_research::sat::arbib_et_al_matching(
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
+        encoded_input_strings,
+        alphabet,
+        lower_str_size,
+        higher_str_size);
+
+    print_solution(solution, output_file, "Arbib et al. matching CP-SAT");
 
     solution = operations_research::sat::improved_arbib_et_al_path(
         floor(CSUB / CDEL * lower_str_size + higher_str_size),
@@ -225,7 +284,18 @@ int main(int argc, char *argv[])
         higher_str_size,
         lower_bound);
 
-    print_solution(solution, output_file, "IMPROVED Arbib et al. path CP-SAT", true);
+    print_solution(solution, output_file, "IMPROVED Arbib et al. path CP-SAT");
+
+    solution = operations_research::sat::improved_arbib_et_al_matching(
+        floor(CSUB / CDEL * lower_str_size + higher_str_size),
+        encoded_input_strings,
+        alphabet,
+        lower_str_size,
+        distance_matrix,
+        higher_str_size,
+        lower_bound);
+
+    print_solution(solution, output_file, "IMPROVED Arbib et al. matching CP-SAT", true);
 
     output_file.close();
 
