@@ -195,11 +195,12 @@ namespace operations_research
             // }
 
             // additional constraints
-            for (int k = 0; k <= n; k++)
-            {
-                cp_model.AddLessThan(CINS * higher_str_size - d, k * CINS).OnlyEnforceIf(Not(u[k]));
-                cp_model.AddLessOrEqual(k * CDEL, p * CDEL + d).OnlyEnforceIf(u[k]);
-            }
+            LinearExpr sum_u;
+            for (int k = 1; k <= n; k++)
+                sum_u += u[k];
+
+            cp_model.AddLessOrEqual(CINS * higher_str_size - d, CINS * sum_u);
+            cp_model.AddLessOrEqual(CDEL * sum_u, CDEL * p + d);
 
             cp_model.Minimize(d);
 

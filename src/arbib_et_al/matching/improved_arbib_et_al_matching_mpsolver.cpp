@@ -164,55 +164,40 @@ namespace operations_research
             }
         }
 
-        // nocross constraint
+        // nocross constraint reimagined
         for (int k = 0; k < stringpool.size(); k++)
         {
             for (int u = 1; u <= stringpool[k].size(); u++)
             {
                 for (int v = 1; v <= n; v++)
                 {
-                    LinearExpr lhs;
-
-                    for (int j = 1; j <= n; j++)
+                    for (int j = v; j <= n; j++)
                     {
-                        if (j == v)
-                            continue;
+                        LinearExpr sum = LinearExpr(yF[StringArc(k, u, v)]) +
+                                         LinearExpr(yC[StringArc(k, u, v)]);
 
-                        lhs += LinearExpr(yF[StringArc(k, u, j)]) +
-                               LinearExpr(yC[StringArc(k, u, j)]);
-                    }
-
-                    for (int h = 1; h <= stringpool[k].size(); h++)
-                    {
-                        if (h == u)
-                            continue;
-
-                        lhs += LinearExpr(yF[StringArc(k, h, v)]) +
-                               LinearExpr(yC[StringArc(k, h, v)]);
-                    }
-
-                    for (int h = 1; h < u; h++)
-                    {
-                        for (int j = v + 1; j <= n; j++)
+                        for (int h = 1; h < u; h++)
                         {
-                            lhs += LinearExpr(yF[StringArc(k, h, j)]) +
+                            sum += LinearExpr(yF[StringArc(k, h, j)]) +
                                    LinearExpr(yC[StringArc(k, h, j)]);
                         }
+
+                        solver->MakeRowConstraint(sum <= 1.0);
                     }
 
-                    for (int h = u + 1; h <= stringpool[k].size(); h++)
+                    for (int h = u; h <= stringpool[k].size(); h++)
                     {
+                        LinearExpr sum = LinearExpr(yF[StringArc(k, u, v)]) +
+                                         LinearExpr(yC[StringArc(k, u, v)]);
+
                         for (int j = 1; j < v; j++)
                         {
-                            lhs += LinearExpr(yF[StringArc(k, h, j)]) +
+                            sum += LinearExpr(yF[StringArc(k, h, j)]) +
                                    LinearExpr(yC[StringArc(k, h, j)]);
                         }
-                    }
 
-                    solver->MakeRowConstraint(lhs + LinearExpr(yDel[StringIndelArc(k, u)]) <=
-                                              stringpool[k].size() * (1.0 -
-                                                                      LinearExpr(yF[StringArc(k, u, v)]) -
-                                                                      LinearExpr(yC[StringArc(k, u, v)])));
+                        solver->MakeRowConstraint(sum <= 1.0);
+                    }
                 }
             }
         }
@@ -311,15 +296,16 @@ namespace operations_research
         //     }
         // }
 
-        // additional constraints made results worse
-        // for (int j = 1; j <= n; j++)
-        // {
-        //     solver->MakeRowConstraint(higher_str_size - LinearExpr(d) <=
-        //                               j - 1 + LinearExpr(z[j]) * (higher_str_size + 1));
+        // additional constraints
+        LinearExpr sum_z;
+        for (int k = 1; k <= n; k++)
+            sum_z += LinearExpr(z[k]);
 
-        //     solver->MakeRowConstraint(j <=
-        //                               p + LinearExpr(d) - higher_str_size * (LinearExpr(z[j]) - 1));
-        // }
+        solver->MakeRowConstraint(CINS * higher_str_size - LinearExpr(d) <=
+                                  CINS * sum_z);
+
+        solver->MakeRowConstraint(CDEL * sum_z <=
+                                  CDEL * p + LinearExpr(d));
 
         MPObjective *objective = solver->MutableObjective();
         objective->SetCoefficient(d, 1);

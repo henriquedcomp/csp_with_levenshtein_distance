@@ -231,15 +231,16 @@ namespace operations_research
             }
         }
 
-        // additional constraints made results worse
-        // for (int k = 0; k <= n; k++)
-        // {
-        //     solver->MakeRowConstraint(higher_str_size - LinearExpr(d) <=
-        //                               k - 1 + LinearExpr(u[k]) * (higher_str_size + 1));
+        // additional constraints
+        LinearExpr sum_u;
+        for (int k = 1; k <= n; k++)
+            sum_u += LinearExpr(u[k]);
 
-        //     solver->MakeRowConstraint(k <=
-        //                               p + LinearExpr(d) - higher_str_size * (LinearExpr(u[k]) - 1));
-        // }
+        solver->MakeRowConstraint(CINS * higher_str_size - LinearExpr(d) <=
+                                  CINS * sum_u);
+
+        solver->MakeRowConstraint(CDEL * sum_u <=
+                                  CDEL * p + LinearExpr(d));
 
         MPObjective *objective = solver->MutableObjective();
         objective->SetCoefficient(d, 1);

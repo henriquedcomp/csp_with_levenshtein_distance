@@ -36,6 +36,7 @@ void print_solution(optional<Solution> &solution, ofstream &output_file, const s
     }
 
     output_file << (!last_line ? "\n" : "");
+    output_file.flush();
 }
 
 int main(int argc, char *argv[])
@@ -110,7 +111,9 @@ int main(int argc, char *argv[])
 
     double lower_bound = diameter / 2;
 
-    optional<Solution> solution = operations_research::hayashida_and_koyano_2017(
+    optional<Solution> solution;
+
+    solution = operations_research::hayashida_and_koyano_2017(
         floor(CSUB / CDEL * lower_str_size + higher_str_size),
         encoded_input_strings,
         alphabet,

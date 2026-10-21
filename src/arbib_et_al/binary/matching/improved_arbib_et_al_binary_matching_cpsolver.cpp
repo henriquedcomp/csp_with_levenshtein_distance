@@ -147,46 +147,33 @@ namespace operations_research
                 {
                     for (int v = 1; v <= n; v++)
                     {
-                        LinearExpr lhs;
-
-                        for (int j = 1; j <= n; j++)
+                        for (int j = v; j <= n; j++)
                         {
-                            if (j == v)
-                                continue;
+                            LinearExpr sum = yF[StringArc(k, u, v)] +
+                                             yC[StringArc(k, u, v)];
 
-                            lhs += yF[StringArc(k, u, j)] +
-                                   yC[StringArc(k, u, j)];
-                        }
-
-                        for (int h = 1; h <= stringpool[k].size(); h++)
-                        {
-                            if (h == u)
-                                continue;
-
-                            lhs += yF[StringArc(k, h, v)] +
-                                   yC[StringArc(k, h, v)];
-                        }
-
-                        for (int h = 1; h < u; h++)
-                        {
-                            for (int j = v + 1; j <= n; j++)
+                            for (int h = 1; h < u; h++)
                             {
-                                lhs += yF[StringArc(k, h, j)] +
+                                sum += yF[StringArc(k, h, j)] +
                                        yC[StringArc(k, h, j)];
                             }
+
+                            cp_model.AddLessOrEqual(sum, 1.0);
                         }
 
-                        for (int h = u + 1; h <= stringpool[k].size(); h++)
+                        for (int h = u; h <= stringpool[k].size(); h++)
                         {
+                            LinearExpr sum = yF[StringArc(k, u, v)] +
+                                             yC[StringArc(k, u, v)];
+
                             for (int j = 1; j < v; j++)
                             {
-                                lhs += yF[StringArc(k, h, j)] +
+                                sum += yF[StringArc(k, h, j)] +
                                        yC[StringArc(k, h, j)];
                             }
-                        }
 
-                        cp_model.AddLessOrEqual(lhs + yDel[StringIndelArc(k, u)],
-                                                stringpool[k].size() * (1.0 - yF[StringArc(k, u, v)]) - yC[StringArc(k, u, v)]);
+                            cp_model.AddLessOrEqual(sum, 1.0);
+                        }
                     }
                 }
             }
@@ -282,11 +269,12 @@ namespace operations_research
             // }
 
             // additional constraints
-            for (int j = 1; j <= n; j++)
-            {
-                cp_model.AddLessThan(CINS * higher_str_size - d, j * CINS).OnlyEnforceIf(Not(z[j]));
-                cp_model.AddLessOrEqual(j * CDEL, p * CDEL + d).OnlyEnforceIf(z[j]);
-            }
+            LinearExpr sum_z;
+            for (int k = 1; k <= n; k++)
+                sum_z += z[k];
+
+            cp_model.AddLessOrEqual(CINS * higher_str_size - d, CINS * sum_z);
+            cp_model.AddLessOrEqual(CDEL * sum_z, CDEL * p + d);
 
             cp_model.Minimize(d);
 
