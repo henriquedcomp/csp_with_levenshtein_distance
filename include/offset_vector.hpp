@@ -29,6 +29,11 @@ public:
         return data[index - offset];
     }
 
+    size_t size()
+    {
+        return data.size();
+    }
+
     class Iterator
     {
     private:

@@ -3,7 +3,6 @@
 #include "config.hpp"
 #include "offset_vector.hpp"
 #include "graph_construction.hpp"
-
 #include "ortools/sat/cp_model.h"
 
 using namespace std;
@@ -13,50 +12,50 @@ namespace operations_research
     namespace sat
     {
         optional<Solution> improved_arbib_et_al_path(
-            int n,
-            const vector<vector<int>> &stringpool,
-            const string_view &a,
-            int p,
-            const SymmetricMatrix<double> &dm,
+            int sol_size_ub,
+            int sol_size_lb,
+            const vector<vector<int>> &input_strings,
+            const string_view &alphabet,
             int higher_str_size,
-            double solution_lower_bound)
+            int lower_str_size,
+            double sol_ub,
+            double sol_lb)
         {
             CpModelBuilder cp_model;
 
-            const double solution_ub = CSUB * p + CDEL * (higher_str_size - p);
-            const Domain solution_domain(solution_lower_bound, solution_ub);
-            const IntVar d = cp_model.NewIntVar(solution_domain);
+            const Domain solution_domain(sol_lb, sol_ub);
+            const IntVar r = cp_model.NewIntVar(solution_domain);
 
-            const Domain solution_string_domain(0, a.size() - 1);
-            vector<IntVar> x(n);
+            const Domain solution_string_domain(0, alphabet.size() - 1);
+            vector<IntVar> t(sol_size_ub);
 
-            for (int i = 0; i < n; i++)
-                x[i] = cp_model.NewIntVar(solution_string_domain);
+            for (int i = 0; i < sol_size_ub; i++)
+                t[i] = cp_model.NewIntVar(solution_string_domain);
 
-            OffsetVector<BoolVar> u(0.0, n + 1);
-            for (int k = 0; k <= n + 1; k++)
-                u[k] = cp_model.NewBoolVar();
+            OffsetVector<BoolVar> l(sol_size_lb, sol_size_ub + 1);
+            for (int k = sol_size_lb; k <= sol_size_ub + 1; k++)
+                l[k] = cp_model.NewBoolVar();
 
-            for (int k = 1; k < n; k++)
-                cp_model.AddGreaterOrEqual(u[k], u[k + 1]);
+            for (int k = sol_size_lb + 1; k < sol_size_ub; k++)
+                cp_model.AddGreaterOrEqual(l[k], l[k + 1]); // (4.35)
 
-            cp_model.AddEquality(u[0], 1.0);
-            cp_model.AddEquality(u[n + 1], 0.0);
+            cp_model.AddEquality(l[sol_size_lb], 1.0);     // (4.36)
+            cp_model.AddEquality(l[sol_size_ub + 1], 0.0); // (4.37)
 
-            vector<map<Arc, BoolVar>> flow(stringpool.size());
+            vector<map<Arc, BoolVar>> flow(input_strings.size());
 
-            for (int i = 0; i < stringpool.size(); i++)
+            for (int i = 0; i < input_strings.size(); i++)
             {
-                int nk = stringpool[i].size();
+                int nk = input_strings[i].size();
 
                 vector<Arc> arcs;
-                GraphConstruction::generate_arcs(nk, n, arcs);
+                GraphConstruction::generate_arcs(nk, sol_size_ub, arcs);
 
                 vector<Vertex> nodes;
                 GraphConstruction::generate_nodes(arcs, nodes);
 
                 vector<FreeSlantArc> free_slant_arcs;
-                GraphConstruction::generate_free_slant_arcs(stringpool[i], nk, n, free_slant_arcs);
+                GraphConstruction::generate_free_slant_arcs(input_strings[i], nk, sol_size_ub, free_slant_arcs);
 
                 auto &internal_flow = flow[i];
                 for (const auto &arc : arcs)
@@ -70,20 +69,20 @@ namespace operations_research
                 {
                     int j = get<1>(get<1>(arc));
 
-                    if (0 < j && j <= n)
-                        cp_model.AddLessOrEqual(internal_flow[arc], u[j]);
+                    if (sol_size_lb < j && j <= sol_size_ub)
+                        cp_model.AddLessOrEqual(internal_flow[arc], l[j]); // (4.39)
                 }
 
                 for (const auto &arc : free_slant_arcs)
                 {
                     int j = get<1>(get<1>(arc));
 
-                    if (0 < j && j <= n)
-                        cp_model.AddLessOrEqual(zero_cost_flow[arc], u[j]);
+                    if (sol_size_lb < j && j <= sol_size_ub)
+                        cp_model.AddLessOrEqual(zero_cost_flow[arc], l[j]); // (4.39)
                 }
 
                 for (const auto &zcf : zero_cost_flow)
-                    cp_model.AddEquality(x[get<1>(get<1>(zcf.first)) - 1], get<2>(zcf.first)).OnlyEnforceIf(zcf.second);
+                    cp_model.AddEquality(t[get<1>(get<1>(zcf.first)) - 1], get<2>(zcf.first)).OnlyEnforceIf(zcf.second); // (4.49)
 
                 LinearExpr source;
 
@@ -95,7 +94,7 @@ namespace operations_research
                     if (get<0>(arc) == make_tuple(0, 0))
                         source += zero_cost_flow[arc];
 
-                cp_model.AddEquality(source, 1.0);
+                cp_model.AddEquality(source, 1.0); // (4.31)
 
                 for (const auto &vertex : nodes)
                 {
@@ -125,10 +124,10 @@ namespace operations_research
                             inflow += zero_cost_flow[arc];
                     }
 
-                    cp_model.AddEquality(outflow, inflow);
+                    cp_model.AddEquality(outflow, inflow); // (4.32)
                 }
 
-                for (int k = 0; k <= n; k++)
+                for (int k = sol_size_lb; k <= sol_size_ub; k++)
                 {
                     LinearExpr outflow, inflow;
                     Vertex node(nk, k);
@@ -151,7 +150,7 @@ namespace operations_research
                             inflow += zero_cost_flow[arc];
                     }
 
-                    cp_model.AddEquality(inflow - outflow, u[k] - u[k + 1]);
+                    cp_model.AddEquality(inflow - outflow, l[k] - l[k + 1]); // (4.38)
                 }
 
                 LinearExpr distance;
@@ -159,50 +158,18 @@ namespace operations_research
                 for (const auto &value : internal_flow)
                     distance += get<2>(value.first) * value.second;
 
-                cp_model.AddLessOrEqual(distance, d);
+                cp_model.AddLessOrEqual(distance, r); // (4.30)
             }
 
-            // triangle inequality - it makes runtime worse
-            // for (int i = 0; i < stringpool.size(); i++)
-            // {
-            //     LinearExpr distance_i_x;
-
-            //     for (const auto &value : flow[i])
-            //         distance_i_x += value.second;
-
-            //     for (int j = 0; j < stringpool.size(); j++)
-            //     {
-            //         if (i == j)
-            //             continue;
-
-            //         LinearExpr distance_j_x;
-
-            //         for (const auto &value : flow[j])
-            //             distance_j_x += value.second;
-
-            //         cp_model.AddGreaterOrEqual(dm(i, j) + distance_i_x, distance_j_x);
-            //     }
-
-            //     for (int j = i + 1; j < stringpool.size(); j++)
-            //     {
-            //         LinearExpr distance_j_x;
-
-            //         for (const auto &value : flow[j])
-            //             distance_j_x += value.second;
-
-            //         cp_model.AddGreaterOrEqual(distance_i_x + distance_j_x, dm(i, j));
-            //     }
-            // }
-
             // additional constraints
-            LinearExpr sum_u;
-            for (int k = 1; k <= n; k++)
-                sum_u += u[k];
+            LinearExpr sum_u = sol_size_lb;
+            for (int k = sol_size_lb + 1; k <= sol_size_ub; k++)
+                sum_u += l[k];
 
-            cp_model.AddLessOrEqual(CINS * higher_str_size - d, CINS * sum_u);
-            cp_model.AddLessOrEqual(CDEL * sum_u, CDEL * p + d);
+            cp_model.AddLessOrEqual(CINS * higher_str_size - r, CINS * sum_u); // (4.43)
+            cp_model.AddLessOrEqual(CDEL * sum_u, CDEL * lower_str_size + r);  // (4.44)
 
-            cp_model.Minimize(d);
+            cp_model.Minimize(r);
 
             Model model;
             SatParameters parameters;
@@ -235,15 +202,15 @@ namespace operations_research
             vector<int> encoded_solution_str;
             string decoded_solution_str;
 
-            encoded_solution_str.reserve(x.size());
+            encoded_solution_str.reserve(t.size());
 
             int i = 0;
-            int solution_length = 0;
-            for (BoolVar var : u)
+            int solution_length = sol_size_lb;
+            for (BoolVar var : l)
             {
                 if (SolutionIntegerValue(response, var) < 0.5)
                 {
-                    solution_length = i - 1;
+                    solution_length = sol_size_lb + i - 1;
                     break;
                 }
 
@@ -251,7 +218,7 @@ namespace operations_research
             }
 
             i = 0;
-            for (IntVar var : x)
+            for (IntVar var : t)
             {
                 if (i++ >= solution_length)
                     break;
@@ -266,7 +233,7 @@ namespace operations_research
 
             Solution solution = {
                 decoded_solution_str,
-                static_cast<double>(SolutionIntegerValue(response, d)),
+                static_cast<double>(SolutionIntegerValue(response, r)),
                 status,
                 response.wall_time()}; // seconds
 

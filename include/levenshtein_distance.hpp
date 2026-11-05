@@ -31,6 +31,30 @@ double levenshtein_distance(const vector<int> &s, const vector<int> &t)
     return dp_matrix[0][t.size()];
 };
 
+double levenshtein_distance(const string &s, const string &t)
+{
+    vector<vector<double>> dp_matrix(2, vector<double>(t.size() + 1));
+
+    for (int j = 0; j < t.size() + 1; j++)
+        dp_matrix[0][j] = j * CINS;
+
+    for (int i = 1; i < s.size() + 1; i++)
+    {
+        dp_matrix[1][0] = i * CDEL;
+
+        for (int j = 1; j < t.size() + 1; j++)
+        {
+            dp_matrix[1][j] = min({dp_matrix[0][j - 1] + (s[i - 1] == t[j - 1] ? 0 : CSUB),
+                                   dp_matrix[0][j] + CDEL,
+                                   dp_matrix[1][j - 1] + CINS});
+        }
+
+        swap(dp_matrix[0], dp_matrix[1]);
+    }
+
+    return dp_matrix[0][t.size()];
+};
+
 // I'll keep it here for possible future use (backtracking)
 // double levenshtein_distance(const vector<int> &s, const vector<int> &t)
 // {

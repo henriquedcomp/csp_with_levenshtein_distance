@@ -11,10 +11,13 @@ using namespace std;
 namespace operations_research
 {
     optional<Solution> hayashida_and_koyano_2017(
-        int m,
-        const vector<vector<int>> &s,
-        const string_view &a,
-        const SymmetricMatrix<double> &dm)
+        int sol_size_ub,
+        int sol_size_lb,
+        const vector<vector<int>> &input_strings,
+        const string_view &alphabet,
+        const SymmetricMatrix<double> &distance_matrix,
+        double sol_ub,
+        double sol_lb)
     {
         unique_ptr<MPSolver> solver(MPSolver::CreateSolver("GUROBI"));
         if (!solver)
@@ -25,36 +28,35 @@ namespace operations_research
 
         solver->set_time_limit(TIME_LIMIT_IN_MS);
 
-        const double infinity = solver->infinity();
-        MPVariable *d = solver->MakeNumVar(0.0, infinity, "d");
-        MPVariable *l = solver->MakeIntVar(0.0, m, "l");
+        MPVariable *r = solver->MakeNumVar(sol_lb, sol_ub, "r");
+        MPVariable *l = solver->MakeIntVar(sol_size_lb, sol_size_ub, "l");
 
         vector<MPVariable *> t;
-        solver->MakeIntVarArray(m, 0.0, a.size() - 1, "t", &t);
+        solver->MakeIntVarArray(sol_size_ub, 0.0, alphabet.size() - 1, "t", &t);
 
-        vector<vector<vector<MPVariable *>>> x(s.size() + 1);
-        vector<vector<vector<MPVariable *>>> y(s.size() + 1);
-        vector<vector<vector<MPVariable *>>> z(s.size() + 1);
-        vector<vector<vector<MPVariable *>>> g(s.size() + 1);
-        vector<vector<vector<MPVariable *>>> h(s.size() + 1);
+        vector<vector<vector<MPVariable *>>> x(input_strings.size() + 1);
+        vector<vector<vector<MPVariable *>>> y(input_strings.size() + 1);
+        vector<vector<vector<MPVariable *>>> z(input_strings.size() + 1);
+        vector<vector<vector<MPVariable *>>> g(input_strings.size() + 1);
+        vector<vector<vector<MPVariable *>>> h(input_strings.size() + 1);
 
-        for (int k = 0; k < s.size(); k++)
+        for (int k = 0; k < input_strings.size(); k++)
         {
-            x[k].resize(s[k].size() + 1);
-            y[k].resize(s[k].size() + 1);
-            z[k].resize(s[k].size() + 1);
-            g[k].resize(s[k].size() + 1);
-            h[k].resize(s[k].size() + 1);
+            x[k].resize(input_strings[k].size() + 1);
+            y[k].resize(input_strings[k].size() + 1);
+            z[k].resize(input_strings[k].size() + 1);
+            g[k].resize(input_strings[k].size() + 1);
+            h[k].resize(input_strings[k].size() + 1);
 
-            for (int i = 0; i <= s[k].size(); i++)
+            for (int i = 0; i <= input_strings[k].size(); i++)
             {
-                x[k][i].resize(m + 1);
-                y[k][i].resize(m + 1);
-                z[k][i].resize(m + 1);
-                g[k][i].resize(m + 1);
-                h[k][i].resize(m + 1);
+                x[k][i].resize(sol_size_ub + 1);
+                y[k][i].resize(sol_size_ub + 1);
+                z[k][i].resize(sol_size_ub + 1);
+                g[k][i].resize(sol_size_ub + 1);
+                h[k][i].resize(sol_size_ub + 1);
 
-                for (int j = 0; j <= m; j++)
+                for (int j = 0; j <= sol_size_ub; j++)
                 {
                     if (i > 0)
                     {
@@ -82,19 +84,19 @@ namespace operations_research
             }
         }
 
-        LinearExpr diff = m - LinearExpr(l);
+        LinearExpr diff = sol_size_ub - LinearExpr(l);
 
-        for (int k = 0; k < s.size(); k++)
+        for (int k = 0; k < input_strings.size(); k++)
         {
             LinearExpr distance;
 
-            size_t nk = s[k].size();
+            size_t nk = input_strings[k].size();
 
             for (int i = 1; i <= nk; i++)
             {
                 distance += CDEL * LinearExpr(x[k][i][0]);
 
-                for (int j = 1; j <= m; j++)
+                for (int j = 1; j <= sol_size_ub; j++)
                 {
                     distance += (CDEL * LinearExpr(x[k][i][j]) +
                                  CINS * LinearExpr(y[k][i][j]) +
@@ -102,28 +104,28 @@ namespace operations_research
                 }
             }
 
-            for (int j = 1; j <= m; j++)
+            for (int j = 1; j <= sol_size_ub; j++)
                 distance += CINS * LinearExpr(y[k][0][j]);
 
             distance -= CINS * diff;
 
-            solver->MakeRowConstraint(distance <= d);
+            solver->MakeRowConstraint(distance <= r); // (4.2)
 
             solver->MakeRowConstraint(
                 LinearExpr(x[k][1][0]) +
                     LinearExpr(y[k][0][1]) +
                     LinearExpr(z[k][1][1]) ==
-                1);
+                1); // (4.3)
 
-            solver->MakeRowConstraint(LinearExpr(x[k][nk][0]) == LinearExpr(y[k][nk][1]));
+            solver->MakeRowConstraint(LinearExpr(x[k][nk][0]) == LinearExpr(y[k][nk][1])); // (4.5)
 
-            solver->MakeRowConstraint(LinearExpr(x[k][1][m]) == LinearExpr(y[k][0][m]));
+            solver->MakeRowConstraint(LinearExpr(x[k][1][sol_size_ub]) == LinearExpr(y[k][0][sol_size_ub])); // (4.7)
 
             solver->MakeRowConstraint(
-                LinearExpr(x[k][nk][m]) +
-                    LinearExpr(y[k][nk][m]) +
-                    LinearExpr(z[k][nk][m]) ==
-                1);
+                LinearExpr(x[k][nk][sol_size_ub]) +
+                    LinearExpr(y[k][nk][sol_size_ub]) +
+                    LinearExpr(z[k][nk][sol_size_ub]) ==
+                1); // (4.11)
 
             for (int i = 1; i < nk; i++)
             {
@@ -131,15 +133,15 @@ namespace operations_research
                     LinearExpr(x[k][i][0]) ==
                     LinearExpr(x[k][i + 1][0]) +
                         LinearExpr(y[k][i][1]) +
-                        LinearExpr(z[k][i + 1][1]));
+                        LinearExpr(z[k][i + 1][1])); // (4.4)
 
                 solver->MakeRowConstraint(
-                    LinearExpr(x[k][i][m]) +
-                        LinearExpr(y[k][i][m]) +
-                        LinearExpr(z[k][i][m]) ==
-                    LinearExpr(x[k][i + 1][m]));
+                    LinearExpr(x[k][i][sol_size_ub]) +
+                        LinearExpr(y[k][i][sol_size_ub]) +
+                        LinearExpr(z[k][i][sol_size_ub]) ==
+                    LinearExpr(x[k][i + 1][sol_size_ub])); // (4.10)
 
-                for (int j = 1; j < m; j++)
+                for (int j = 1; j < sol_size_ub; j++)
                 {
                     solver->MakeRowConstraint(
                         LinearExpr(x[k][i][j]) +
@@ -147,59 +149,61 @@ namespace operations_research
                             LinearExpr(z[k][i][j]) ==
                         LinearExpr(x[k][i + 1][j]) +
                             LinearExpr(y[k][i][j + 1]) +
-                            LinearExpr(z[k][i + 1][j + 1]));
+                            LinearExpr(z[k][i + 1][j + 1])); // (4.8)
                 }
             }
 
-            for (int j = 1; j < m; j++)
+            for (int j = 1; j < sol_size_ub; j++)
             {
                 solver->MakeRowConstraint(
                     LinearExpr(y[k][0][j]) ==
                     LinearExpr(x[k][1][j]) +
                         LinearExpr(y[k][0][j + 1]) +
-                        LinearExpr(z[k][1][j + 1]));
+                        LinearExpr(z[k][1][j + 1])); // (4.6)
 
                 solver->MakeRowConstraint(
                     LinearExpr(x[k][nk][j]) +
                         LinearExpr(y[k][nk][j]) +
                         LinearExpr(z[k][nk][j]) ==
-                    LinearExpr(y[k][nk][j + 1]));
+                    LinearExpr(y[k][nk][j + 1])); // (4.9)
             }
 
-            for (int j = 1; j <= m; j++)
+            for (int j = 1; j <= sol_size_ub; j++)
             {
                 solver->MakeRowConstraint(
-                    LinearExpr(y[k][nk][j]) >= 1.0 / m * (j - LinearExpr(l)));
+                    LinearExpr(y[k][nk][j]) >= 1.0 / sol_size_ub * (j - LinearExpr(l))); // (4.12)
 
                 for (int i = 1; i <= nk; i++)
                 {
-                    solver->MakeRowConstraint(s[k][i - 1] - LinearExpr(t[j - 1]) <= a.size() * LinearExpr(g[k][i][j]));
+                    solver->MakeRowConstraint(input_strings[k][i - 1] - LinearExpr(t[j - 1]) <=
+                                              alphabet.size() * LinearExpr(g[k][i][j])); // (4.13)
 
-                    solver->MakeRowConstraint(LinearExpr(t[j - 1]) - s[k][i - 1] <= a.size() * LinearExpr(g[k][i][j]));
+                    solver->MakeRowConstraint(LinearExpr(t[j - 1]) - input_strings[k][i - 1] <=
+                                              alphabet.size() * LinearExpr(g[k][i][j])); // (4.14)
 
                     solver->MakeRowConstraint(
                         LinearExpr(h[k][i][j]) >=
                         LinearExpr(z[k][i][j]) +
-                            LinearExpr(g[k][i][j]) - 1);
+                            LinearExpr(g[k][i][j]) - 1); // (4.15)
 
                     solver->MakeRowConstraint(
                         LinearExpr(h[k][i][j]) <=
-                        0.5 * (LinearExpr(z[k][i][j]) + LinearExpr(g[k][i][j])));
+                        0.5 * (LinearExpr(z[k][i][j]) + LinearExpr(g[k][i][j]))); // (4.16)
                 }
             }
         }
 
         // triangle inequality
-        for (int k1 = 0; k1 < s.size(); k1++)
+        for (int k1 = 0; k1 < input_strings.size(); k1++)
         {
             LinearExpr distance_k1_t;
-            size_t nk1 = s[k1].size();
+            size_t nk1 = input_strings[k1].size();
 
             for (int i = 1; i <= nk1; i++)
             {
                 distance_k1_t += CDEL * LinearExpr(x[k1][i][0]);
 
-                for (int j = 1; j <= m; j++)
+                for (int j = 1; j <= sol_size_ub; j++)
                 {
                     distance_k1_t += CDEL * LinearExpr(x[k1][i][j]) +
                                      CINS * LinearExpr(y[k1][i][j]) +
@@ -207,25 +211,25 @@ namespace operations_research
                 }
             }
 
-            for (int j = 1; j <= m; j++)
+            for (int j = 1; j <= sol_size_ub; j++)
                 distance_k1_t += CINS * LinearExpr(y[k1][0][j]);
 
             distance_k1_t -= CINS * diff;
 
-            for (int k2 = 0; k2 < s.size(); k2++)
+            for (int k2 = 0; k2 < input_strings.size(); k2++)
             {
                 if (k2 == k1)
                     continue;
 
                 LinearExpr distance_k2_t;
 
-                size_t nk2 = s[k2].size();
+                size_t nk2 = input_strings[k2].size();
 
                 for (int i = 1; i <= nk2; i++)
                 {
                     distance_k2_t += CDEL * LinearExpr(x[k2][i][0]);
 
-                    for (int j = 1; j <= m; j++)
+                    for (int j = 1; j <= sol_size_ub; j++)
                     {
                         distance_k2_t += CDEL * LinearExpr(x[k2][i][j]) +
                                          CINS * LinearExpr(y[k2][i][j]) +
@@ -233,26 +237,26 @@ namespace operations_research
                     }
                 }
 
-                for (int j = 1; j <= m; j++)
+                for (int j = 1; j <= sol_size_ub; j++)
                     distance_k2_t += CINS * LinearExpr(y[k2][0][j]);
 
                 distance_k2_t -= CINS * diff;
 
                 solver->MakeRowConstraint(
-                    dm(k1, k2) + distance_k1_t >= distance_k2_t);
+                    distance_matrix(k1, k2) + distance_k1_t >= distance_k2_t); // (4.17)
             }
 
-            for (int k2 = k1 + 1; k2 < s.size(); k2++)
+            for (int k2 = k1 + 1; k2 < input_strings.size(); k2++)
             {
                 LinearExpr distance_k2_t;
 
-                size_t nk2 = s[k2].size();
+                size_t nk2 = input_strings[k2].size();
 
                 for (int i = 1; i <= nk2; i++)
                 {
                     distance_k2_t += CDEL * LinearExpr(x[k2][i][0]);
 
-                    for (int j = 1; j <= m; j++)
+                    for (int j = 1; j <= sol_size_ub; j++)
                     {
                         distance_k2_t += CDEL * LinearExpr(x[k2][i][j]) +
                                          CINS * LinearExpr(y[k2][i][j]) +
@@ -260,18 +264,18 @@ namespace operations_research
                     }
                 }
 
-                for (int j = 1; j <= m; j++)
+                for (int j = 1; j <= sol_size_ub; j++)
                     distance_k2_t += CINS * LinearExpr(y[k2][0][j]);
 
                 distance_k2_t -= CINS * diff;
 
                 solver->MakeRowConstraint(
-                    distance_k1_t + distance_k2_t >= dm(k1, k2));
+                    distance_k1_t + distance_k2_t >= distance_matrix(k1, k2)); // (4.18)
             }
         }
 
         MPObjective *objective = solver->MutableObjective();
-        objective->SetCoefficient(d, 1);
+        objective->SetCoefficient(r, 1);
         objective->SetMinimization();
 
         const MPSolver::ResultStatus result_status = solver->Solve();
@@ -289,6 +293,7 @@ namespace operations_research
             {
                 status = "";
                 LOG(INFO) << "The solver could not solve the problem.";
+                LOG(WARNING) << "Time elapsed: " << absl::ToDoubleSeconds(solver->DurationSinceConstruction()) << "s";
                 return nullopt;
             }
         }
@@ -314,7 +319,7 @@ namespace operations_research
 
         Solution solution = {
             decoded_solution_str,
-            d->solution_value(),
+            r->solution_value(),
             status,
             absl::ToDoubleSeconds(solver->DurationSinceConstruction())};
 

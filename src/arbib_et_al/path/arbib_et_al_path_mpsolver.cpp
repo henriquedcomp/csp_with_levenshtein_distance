@@ -6,7 +6,6 @@
 #include "config.hpp"
 #include "offset_vector.hpp"
 #include "graph_construction.hpp"
-
 #include "ortools/linear_solver/linear_solver.h"
 
 using namespace std;
@@ -14,9 +13,12 @@ using namespace std;
 namespace operations_research
 {
     optional<Solution> arbib_et_al_path(
-        int n,
-        const vector<vector<int>> &stringpool,
-        const string_view &a)
+        int sol_size_ub,
+        int sol_size_lb,
+        const vector<vector<int>> &input_strings,
+        const string_view &alphabet,
+        double sol_ub,
+        double sol_lb)
     {
         unique_ptr<MPSolver> solver(MPSolver::CreateSolver("GUROBI"));
         if (!solver)
@@ -27,38 +29,36 @@ namespace operations_research
 
         solver->set_time_limit(TIME_LIMIT_IN_MS);
 
-        const double infinity = solver->infinity();
-        MPVariable *d = solver->MakeNumVar(0.0, infinity, "d");
+        MPVariable *r = solver->MakeNumVar(sol_lb, sol_ub, "r");
 
-        vector<MPVariable *> x;
-        solver->MakeNumVarArray(n, 0, a.size() - 1, "x", &x);
+        vector<MPVariable *> t;
+        solver->MakeNumVarArray(sol_size_ub, 0, alphabet.size() - 1, "t", &t);
 
-        OffsetVector<MPVariable *> u(0, n + 1);
-        for (int k = 0; k <= n + 1; k++)
+        OffsetVector<MPVariable *> l(sol_size_lb, sol_size_ub + 1);
+        for (int k = sol_size_lb; k <= sol_size_ub + 1; k++)
         {
-            string variable_name = format("u_{}", k);
-            u[k] = solver->MakeBoolVar(variable_name);
+            string variable_name = format("l_{}", k);
+            l[k] = solver->MakeBoolVar(variable_name);
         }
 
-        for (int k = 1; k < n; k++)
-            solver->MakeRowConstraint(LinearExpr(u[k]) >= LinearExpr(u[k + 1])); // (9)
+        for (int k = sol_size_lb + 1; k < sol_size_ub; k++)
+            solver->MakeRowConstraint(LinearExpr(l[k]) >= LinearExpr(l[k + 1])); // (4.35)
 
-        // (11) obs.
-        solver->MakeRowConstraint(LinearExpr(u[0]) == 1.0);
-        solver->MakeRowConstraint(LinearExpr(u[n + 1]) == 0.0);
+        solver->MakeRowConstraint(LinearExpr(l[sol_size_lb]) == 1.0); // (4.36)
+        solver->MakeRowConstraint(LinearExpr(l[sol_size_ub + 1]) == 0.0); // (4.37)
 
-        for (int i = 0; i < stringpool.size(); i++)
+        for (int i = 0; i < input_strings.size(); i++)
         {
-            int nk = stringpool[i].size();
+            int nk = input_strings[i].size();
 
             vector<Arc> arcs;
-            GraphConstruction::generate_arcs(nk, n, arcs);
+            GraphConstruction::generate_arcs(nk, sol_size_ub, arcs);
 
             vector<Vertex> nodes;
             GraphConstruction::generate_nodes(arcs, nodes);
 
             vector<FreeSlantArc> free_slant_arcs;
-            GraphConstruction::generate_free_slant_arcs(stringpool[i], nk, n, free_slant_arcs);
+            GraphConstruction::generate_free_slant_arcs(input_strings[i], nk, sol_size_ub, free_slant_arcs);
 
             // flow is "ye" variables for cost arcs
             map<Arc, MPVariable *> flow;
@@ -67,7 +67,7 @@ namespace operations_research
                 string var_name = "flow" + to_string(i) + "_" +
                                   to_string(get<0>(get<0>(arc))) + "_" + to_string(get<1>(get<0>(arc))) + "_" + to_string(get<0>(get<1>(arc))) + "_" + to_string(get<1>(get<1>(arc)));
 
-                flow[arc] = solver->MakeNumVar(0.0, solver->infinity(), var_name);
+                flow[arc] = solver->MakeNumVar(0.0, 1.0, var_name);
             }
 
             // zero_cost_flow is "ye" variables for free slant arcs
@@ -77,23 +77,23 @@ namespace operations_research
                 string var_name = "ye" + to_string(i) + "_" +
                                   to_string(get<0>(get<0>(arc))) + "_" + to_string(get<1>(get<0>(arc))) + "_" + to_string(get<0>(get<1>(arc))) + "_" + to_string(get<1>(get<1>(arc)));
 
-                zero_cost_flow[arc] = solver->MakeNumVar(0.0, solver->infinity(), var_name);
+                zero_cost_flow[arc] = solver->MakeNumVar(0.0, 1.0, var_name);
             }
 
             for (const auto &arc : arcs)
             {
                 int j = get<1>(get<1>(arc));
 
-                if (0 < j && j <= n)
-                    solver->MakeRowConstraint(LinearExpr(flow[arc]) <= LinearExpr(u[j])); // (10)
+                if (sol_size_lb < j && j <= sol_size_ub)
+                    solver->MakeRowConstraint(LinearExpr(flow[arc]) <= LinearExpr(l[j])); // (4.39)
             }
 
             for (const auto &arc : free_slant_arcs)
             {
                 int j = get<1>(get<1>(arc));
 
-                if (0 < j && j <= n)
-                    solver->MakeRowConstraint(LinearExpr(zero_cost_flow[arc]) <= LinearExpr(u[j])); // (10)
+                if (sol_size_lb < j && j <= sol_size_ub)
+                    solver->MakeRowConstraint(LinearExpr(zero_cost_flow[arc]) <= LinearExpr(l[j])); // (4.39)
             }
 
             for (const auto &zcf : zero_cost_flow)
@@ -102,13 +102,13 @@ namespace operations_research
 
                 MPVariable *e = solver->MakeBoolVar(name);
 
-                solver->MakeRowConstraint(get<2>(zcf.first) - LinearExpr(x[get<1>(get<1>(zcf.first)) - 1]) <=
-                                          a.size() * LinearExpr(e));
+                solver->MakeRowConstraint(get<2>(zcf.first) - LinearExpr(t[get<1>(get<1>(zcf.first)) - 1]) <=
+                                          alphabet.size() * LinearExpr(e)); // (4.43)
 
-                solver->MakeRowConstraint(LinearExpr(x[get<1>(get<1>(zcf.first)) - 1]) - get<2>(zcf.first) <=
-                                          a.size() * LinearExpr(e));
+                solver->MakeRowConstraint(LinearExpr(t[get<1>(get<1>(zcf.first)) - 1]) - get<2>(zcf.first) <=
+                                          alphabet.size() * LinearExpr(e)); // (4.44)
 
-                solver->MakeRowConstraint(LinearExpr(e) + LinearExpr(zcf.second) <= 1);
+                solver->MakeRowConstraint(LinearExpr(e) + LinearExpr(zcf.second) <= 1); // (4.45)
             }
 
             LinearExpr source;
@@ -121,8 +121,7 @@ namespace operations_research
                 if (get<0>(arc) == make_tuple(0, 0))
                     source += zero_cost_flow[arc];
 
-            // (3)
-            solver->MakeRowConstraint(source == 1.0);
+            solver->MakeRowConstraint(source == 1.0); // (4.31)
 
             for (const auto &vertex : nodes)
             {
@@ -152,11 +151,10 @@ namespace operations_research
                         inflow += zero_cost_flow[arc];
                 }
 
-                // (4)
-                solver->MakeRowConstraint(outflow == inflow);
+                solver->MakeRowConstraint(outflow == inflow); // (4.32)
             }
 
-            for (int k = 0; k <= n; k++)
+            for (int k = sol_size_lb; k <= sol_size_ub; k++)
             {
                 LinearExpr outflow, inflow;
                 Vertex node(nk, k);
@@ -179,8 +177,7 @@ namespace operations_research
                         inflow += zero_cost_flow[arc];
                 }
 
-                // (11)
-                solver->MakeRowConstraint(inflow - outflow == LinearExpr(u[k]) - LinearExpr(u[k + 1]));
+                solver->MakeRowConstraint(inflow - outflow == LinearExpr(l[k]) - LinearExpr(l[k + 1])); // (4.38)
             }
 
             LinearExpr distance;
@@ -188,11 +185,11 @@ namespace operations_research
             for (const auto &value : flow)
                 distance += get<2>(value.first) * LinearExpr(value.second);
 
-            solver->MakeRowConstraint(distance <= d);
+            solver->MakeRowConstraint(distance <= r); // (4.30)
         }
 
         MPObjective *objective = solver->MutableObjective();
-        objective->SetCoefficient(d, 1);
+        objective->SetCoefficient(r, 1);
         objective->SetMinimization();
 
         const MPSolver::ResultStatus result_status = solver->Solve();
@@ -217,15 +214,15 @@ namespace operations_research
         vector<int> encoded_solution_str;
         string decoded_solution_str;
 
-        encoded_solution_str.reserve(x.size());
+        encoded_solution_str.reserve(t.size());
 
         int i = 0;
-        int solution_length = 0;
-        for (MPVariable *var : u)
+        int solution_length = sol_size_lb;
+        for (MPVariable *var : l)
         {
             if (var->solution_value() < 0.5)
             {
-                solution_length = i - 1;
+                solution_length = sol_size_lb + i - 1;
                 break;
             }
 
@@ -233,7 +230,7 @@ namespace operations_research
         }
 
         i = 0;
-        for (MPVariable *var : x)
+        for (MPVariable *var : t)
         {
             if (i++ >= solution_length)
                 break;
@@ -248,7 +245,7 @@ namespace operations_research
 
         Solution solution = {
             decoded_solution_str,
-            d->solution_value(),
+            r->solution_value(),
             status,
             absl::ToDoubleSeconds(solver->DurationSinceConstruction())};
 
