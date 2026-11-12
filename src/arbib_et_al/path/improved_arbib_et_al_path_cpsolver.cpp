@@ -235,7 +235,9 @@ namespace operations_research
                 decoded_solution_str,
                 static_cast<double>(SolutionIntegerValue(response, r)),
                 status,
-                response.wall_time()}; // seconds
+                response.wall_time(),
+                response.best_objective_bound(),
+                (response.objective_value() - response.best_objective_bound()) / response.objective_value() * 100.0};
 
             return solution;
         }

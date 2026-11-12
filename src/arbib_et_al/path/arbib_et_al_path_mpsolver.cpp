@@ -44,7 +44,7 @@ namespace operations_research
         for (int k = sol_size_lb + 1; k < sol_size_ub; k++)
             solver->MakeRowConstraint(LinearExpr(l[k]) >= LinearExpr(l[k + 1])); // (4.35)
 
-        solver->MakeRowConstraint(LinearExpr(l[sol_size_lb]) == 1.0); // (4.36)
+        solver->MakeRowConstraint(LinearExpr(l[sol_size_lb]) == 1.0);     // (4.36)
         solver->MakeRowConstraint(LinearExpr(l[sol_size_ub + 1]) == 0.0); // (4.37)
 
         for (int i = 0; i < input_strings.size(); i++)
@@ -247,7 +247,9 @@ namespace operations_research
             decoded_solution_str,
             r->solution_value(),
             status,
-            absl::ToDoubleSeconds(solver->DurationSinceConstruction())};
+            absl::ToDoubleSeconds(solver->DurationSinceConstruction()),
+            objective->BestBound(),
+            (objective->Value() - objective->BestBound()) / objective->Value() * 100.0};
 
         return solution;
     }

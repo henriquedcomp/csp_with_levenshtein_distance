@@ -35,7 +35,7 @@ namespace operations_research
             for (int k = sol_size_lb + 1; k < sol_size_ub; k++)
                 cp_model.AddGreaterOrEqual(l[k], l[k + 1]); // (4.35)
 
-            cp_model.AddEquality(l[sol_size_lb], 1.0); // (4.36)
+            cp_model.AddEquality(l[sol_size_lb], 1.0);     // (4.36)
             cp_model.AddEquality(l[sol_size_ub + 1], 0.0); // (4.37)
 
             for (int i = 0; i < input_strings.size(); i++)
@@ -230,7 +230,9 @@ namespace operations_research
                 decoded_solution_str,
                 static_cast<double>(SolutionIntegerValue(response, r)),
                 status,
-                response.wall_time()}; // seconds
+                response.wall_time(),
+                response.best_objective_bound(),
+                (response.objective_value() - response.best_objective_bound()) / response.objective_value() * 100.0};
 
             return solution;
         }

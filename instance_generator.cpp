@@ -14,7 +14,7 @@ int main()
     const bool REPLACE_INSTANCES = false;
 
     // controls if instances/random folder will be completely deleted and instances recreated from zero
-    const bool DELETE_AND_RECREATE_INSTANCES = false;
+    const bool DELETE_AND_RECREATE_INSTANCES = true;
 
     const int INSTANCES_PER_COMBINATION = 3;
 
@@ -24,8 +24,8 @@ int main()
     const string RANDOM_DNA_INSTANCE_PATH = RANDOM_INSTANCE_PATH + "/dna";
     const string RANDOM_PROTEIN_INSTANCE_PATH = RANDOM_INSTANCE_PATH + "/protein";
 
-    const vector<int> UB_STRING_SIZE = {5, 10, 15, 20};
-    const vector<int> NUMBER_OF_STRINGS = {10, 20, 30, 40, 50};
+    const vector<int> UB_STRING_SIZE = {10, 15, 20};
+    const vector<int> NUMBER_OF_STRINGS = {10, 20, 30, 40};
 
     const string_view BINARY_ALPHABET = "01";
     const string_view NUCLEOTIDE_ALPHABET = "ACGT";

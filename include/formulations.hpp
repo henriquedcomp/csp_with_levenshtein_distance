@@ -14,6 +14,8 @@ struct Solution
     double distance;
     string status;
     double runtime;
+    double lower_bound;
+    double gap;
 };
 
 namespace operations_research

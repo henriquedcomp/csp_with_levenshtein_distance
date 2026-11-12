@@ -315,7 +315,9 @@ namespace operations_research
             decoded_solution_str,
             r->solution_value(),
             status,
-            absl::ToDoubleSeconds(solver->DurationSinceConstruction())};
+            absl::ToDoubleSeconds(solver->DurationSinceConstruction()),
+            objective->BestBound(),
+            (objective->Value() - objective->BestBound()) / objective->Value() * 100.0};
 
         return solution;
     }

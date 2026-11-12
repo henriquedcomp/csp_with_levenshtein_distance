@@ -223,7 +223,7 @@ namespace operations_research
                 sum_z += l[k];
 
             cp_model.AddLessOrEqual(CINS * higher_str_size - r, CINS * sum_z); // (4.43)
-            cp_model.AddLessOrEqual(CDEL * sum_z, CDEL * lower_str_size + r); // (4.44)
+            cp_model.AddLessOrEqual(CDEL * sum_z, CDEL * lower_str_size + r);  // (4.44)
 
             cp_model.Minimize(r);
 
@@ -291,7 +291,9 @@ namespace operations_research
                 decoded_solution_str,
                 static_cast<double>(SolutionIntegerValue(response, r)),
                 status,
-                response.wall_time()}; // seconds
+                response.wall_time(),
+                response.best_objective_bound(),
+                (response.objective_value() - response.best_objective_bound()) / response.objective_value() * 100.0};
 
             return solution;
         }

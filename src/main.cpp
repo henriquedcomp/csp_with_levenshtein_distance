@@ -26,7 +26,9 @@ void print_solution(optional<Solution> &solution, ofstream &output_file)
         output_file << "STATUS: " << solution.value().status << "\n"
                     << "SOLUTION: " << sanitized_string << "\n"
                     << "DISTANCE: " << solution.value().distance << "\n"
-                    << "RUNTIME: " << solution.value().runtime << "s\n";
+                    << "RUNTIME: " << solution.value().runtime << "s\n"
+                    << "BEST LOWER BOUND: " << solution.value().lower_bound << "\n"
+                    << "GAP: " << solution.value().gap << "\n";
     }
     else
     {
