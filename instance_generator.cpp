@@ -14,7 +14,7 @@ int main()
     const bool REPLACE_INSTANCES = false;
 
     // controls if instances/random folder will be completely deleted and instances recreated from zero
-    const bool DELETE_AND_RECREATE_INSTANCES = true;
+    const bool DELETE_AND_RECREATE_INSTANCES = false;
 
     const int INSTANCES_PER_COMBINATION = 3;
 

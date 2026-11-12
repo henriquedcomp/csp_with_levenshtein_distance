@@ -14,14 +14,44 @@ In this section I'll help you to install OR-Tools. Gurobi can easily be setup fo
 
 Before we proceed, I'll suppose, once you've arrived at this repository, you're a Linux user. If it's not the case, you should consider switch to Linux or follow documentation for your OS. [OR-Tools for C++](https://developers.google.com/optimization/install/cpp).
 
-OR-Tools can be installed from two manners: pre-compiled binary or source code. Let's follow the binary installation due to it simplicity and pre-integration with Gurobi [Building from source OR-Tools C++ on Linux](https://developers.google.com/optimization/install/cpp/source_linux).
-
-Download tar.gz file for your distro in [Installing OR-Tools for C++ from Binary on Linux](https://developers.google.com/optimization/install/cpp/binary_linux)
-
-Extract file in /usr/local. Example for Ubuntu 22.04 LTS:
+First, let's clone the OR-Tools repository. I cloned it into my HOME directory.
 ```
-sudo tar -xzf or-tools_amd64_ubuntu-22.04_cpp_v9.12.4544.tar.gz -C /usr/local
+git clone https://github.com/google/or-tools.git
+cd or-tools
+```
 
+Inside the repository, switch to release 9.14
+```
+git checkout v9.14
+```
+
+Next, let's generate the OR-Tools build.
+```
+cmake -S . -B build -DBUILD_DEPS=ON
+```
+
+The next step will take some time. We are going to compile the source code. The -j$(nproc) flag will locate CPU cores on your machine and use then to perform parallel processing. In my case, this led to a crash, so I have set a limit of 6 cores.
+Command using all cores:
+```
+cmake --build build --config Release -j$(nproc)
+```
+
+Command limiting to 6 cores:
+```
+cmake --build build --config Release -j6
+```
+
+It can print some warnings, this is normal. It took about 30 to 40min in my case.
+
+Finally, we'll install the OR-Tools. By default, it will be located in /usr/local
+```
+sudo cmake --install build
+```
+
+IMPORTANT: Before running this project, if you are using a python environment, please exit it. Such environments may change some important environment variables and cause conflicts when running OR-Tools.
+For example, if you're using Miniconda, exit the environment by using:
+```
+conda deactivate
 ```
 
 Now, OR-Tools must be working properly with Gurobi in this C++ project.
